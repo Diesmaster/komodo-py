@@ -1,9 +1,12 @@
 import pytest
 import requests
 import json
+import random
+from ecpy.curves     import Curve,Point
 
 from unittest.mock import patch, Mock
 from explorer import Explorer  
+from wallet import Wallet
 
 @pytest.fixture
 def mock_response():
@@ -135,3 +138,80 @@ def test_get_transaction(mock_transaction_response):
         result = ex.get_transaction(test_txid)
 
         assert result == mock_transaction_response
+
+def test_ecG():
+    obj = Wallet("hihi")
+    cv_value = Curve.get_curve('secp256k1')
+    
+    # Call the ecG method
+    point = obj.ecG(cv_value)
+    
+    # Assertions
+    assert point.x == 0x79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798
+    assert point.y == 0x483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8
+
+def test_serializePoint():
+    wal = Wallet('hihi')
+
+    # Assuming cv is set (either 'secp256k1' or an actual curve object)
+    cv = Curve.get_curve('secp256k1')
+
+    # Generate points
+    p = wal.ecG(cv)
+    points = [p, 2*p, 3*p, 4*p, 5*p]
+
+    # Expected serialized outputs
+    expected_outputs = [
+        b'\x02y\xbef~\xf9\xdc\xbb\xacU\xa0b\x95\xce\x87\x0b\x07\x02\x9b\xfc\xdb-\xce(\xd9Y\xf2\x81[\x16\xf8\x17\x98',
+        b'\x02\xc6\x04\x7f\x94A\xed}m0E@n\x95\xc0|\xd8\\w\x8eK\x8c\xef<\xa7\xab\xac\t\xb9\\p\x9e\xe5',
+        b'\x02\xf90\x8a\x01\x92X\xc3\x10I4O\x85\xf8\x9dR)\xb51\xc8E\x83o\x99\xb0\x86\x01\xf1\x13\xbc\xe06\xf9',
+        b'\x02\xe4\x93\xdb\xf1\xc1\r\x80\xf3X\x1eI\x04\x93\x0b\x14\x04\xccl\x13\x90\x0e\xe0u\x84t\xfa\x94\xab\xe8\xc4\xcd\x13'
+    ]
+
+    # Validate each point
+    for point, expected_output in zip(points, expected_outputs):
+        serialized = wal.serializePoint(point)
+        assert serialized == expected_output
+
+
+
+def test_base58Iguana():
+
+    wal = Wallet('hihi')
+
+    # Assuming cv is set (either 'secp256k1' or an actual curve object)
+    cv = Curve.get_curve('secp256k1')
+
+    # Generate a point
+    p = wal.ecG(cv)
+
+    # Serialize the point
+    ret = wal.serializePoint(p)
+
+    # Base58 encode using Iguana
+    encoded_ret = wal.base58Iguana(ret)
+
+    # Assert the result
+    assert encoded_ret == "jesTu2BpszP8DKSoi1R5G6ggjHrsrVnboLdx6V47vkoR"
+
+    # Generate a random bytestring
+    random_bytestring = bytes([random.randint(0, 255) for _ in range(32)])
+
+    # Base58 encode and then decode using Iguana
+    encoded_random_str = wal.base58Iguana(random_bytestring)
+    decoded_random_bytes = wal.base58DecodeIguana(encoded_random_str)  # Assuming you have implemented this function
+
+    # Assert that the original and decoded bytestrings are the same
+    assert random_bytestring == decoded_random_bytes
+
+
+@pytest.mark.parametrize("seed, expected", [
+    ("This is a test string hahaha", {'wif': 'UrRj8cUwadaGcbbgTm8xZbnP7PbkakoUpXvddyR5vydMkRuyCVWz', 'address': 'RHhezrNf5u87gNexawSn1bj7fUKuX1kn94', 'pubkey': '03b0a780e5d9a8a7adb6c8dbc357bd28799172666fc3f2c1b8d5310024a62edf38', 'privkey': '481d9e62898116cf9a7aa2d286b4bddde312057bd077bdc858b463f617e53f44'}),
+    ("This is not a test string", {'wif': 'UuvhVqMuEv343WP9oJW2M16HtyHdgWjpXf3x22aW9hM9RggK7uD4', 'address': 'RMsHcBWu5C6Uuq9VKrbggMHhzPcP686xpo', 'pubkey': '02f60c752ab2c73d86780cfdabc6b9ffb2196c5500f7be0d8739d33d6636991708', 'privkey': 'b08837323b995d7d1b055de66dfb07b805fac947afd807cc29edc0632942ff63'}),
+    ("I love komdo", {'wif': 'UtaZYRFbSzXMBk4KjLfut6DzE9ypTco1L3jEHPYvj9dDQWS2soWq', 'address': 'RT89DMeAo1HVaCxGdJPCf56kiJn3boQpXC', 'pubkey': '02457e4746fa51259ec6e6a43f7251e60af86282799ed885741fe315ea970f0966', 'privkey': '8855db3b114d566b036ca7ba775bfa1438493b97745ea0fb2649f03c85a15849'}),
+    ("I love python", {'wif': 'UvjgQCyd2PqJyq9t37yCM5SLQGeNDbyDR1qFqx9niPuCJ3eL8CMn', 'address': 'RWiFJ5nchpP76B8PAX4Ma2yEvadCZU2wa5', 'pubkey': '02acd7fe6e80563a5425eb4cf3382f60e9446cffa6c7d05615b4e7cecc6b0dc528', 'privkey': 'c8b370f0419ff4e3a8b57f2a26ee861849936a64a4b8dbf7b2ad50894d94007b'}),
+])
+def test_create_wallet(seed, expected):
+    wallet = Wallet(seed)
+    result = wallet.create_wallet()
+    assert result == expected
