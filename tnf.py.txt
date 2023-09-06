@@ -28,6 +28,32 @@ def create_inputs(utxo):
 
     return rawtx, amount
 
+
+def create_end():
+    date = int(time.time())
+    nlocktime = bytes.fromhex(format(date, '08x'))[::-1].hex()
+    rawtx= nlocktime
+    rawtx = rawtx + "000000000000000000000000000000"
+    return rawtx
+
+def make_tx_from_scratch(to_pub_amount_dict, total_amount, utxo, from_addr=THIS_NODE_RADDRESS, from_pub=THIS_NODE_PUBKEY, from_priv=THIS_NODE_WIF):
+    from_scri = get_script_key(from_pub)
+
+    print( str(utxo['amount']) + ", total_amount: " + str(total_amount) + ", conv: " + str(utxo['confirmations']))
+    
+    #select utxos
+    if utxo['amount'] > (total_amount) and (utxo['confirmations'] > 0):
+        print( str(utxo['amount']) + ", total_amount: " + str(total_amount)) 
+        #make tx inputs
+        rawtx_inputs, amount = create_inputs(utxo)
+        rawtx_outputs = create_outputs(utxo, from_scri, to_pub_amount_dict)
+        rawtx_end = create_end()
+        return rawtx_inputs + rawtx_outputs + rawtx_end, amount*100000000
+    
+    raise Exception("UTXO not usable")
+    return  "No usable utxo was found", 0
+
+
 #to_pub amount dict utxo, split_count, split_total_satoshis, split_value_sats, from_hash, to_pub=THIS_NODE_PUBKEY
 def create_outputs(utxo, from_hash, to_pub_amount_dict):
     rawtx = ""
@@ -67,45 +93,3 @@ def create_outputs(utxo, from_hash, to_pub_amount_dict):
     else:
         print("cannot")
         return False
-   
-
-def create_split_dict(split_n, split_amount, to_pub=THIS_NODE_PUBKEY):
-    final_arr_dict = []
-
-    if not type(to_pub) == type([]):
-        to_pub = [to_pub]
-
-    total_amount = split_n*len(to_pub)*split_amount
-
-    for n in range(0, split_n):
-        dict = {}
-        for pub in to_pub:
-            dict[pub] = split_amount
-
-        final_arr_dict.append(dict)
-    
-    return final_arr_dict, total_amount
-
-def create_end():
-    date = int(time.time())
-    nlocktime = bytes.fromhex(format(date, '08x'))[::-1].hex()
-    rawtx= nlocktime
-    rawtx = rawtx + "000000000000000000000000000000"
-    return rawtx
-
-def make_tx_from_scratch(to_pub_amount_dict, total_amount, utxo, from_addr=THIS_NODE_RADDRESS, from_pub=THIS_NODE_PUBKEY, from_priv=THIS_NODE_WIF):
-    from_scri = get_script_key(from_pub)
-
-    print( str(utxo['amount']) + ", total_amount: " + str(total_amount) + ", conv: " + str(utxo['confirmations']))
-    
-    #select utxos
-    if utxo['amount'] > (total_amount) and (utxo['confirmations'] > 0):
-        print( str(utxo['amount']) + ", total_amount: " + str(total_amount)) 
-        #make tx inputs
-        rawtx_inputs, amount = create_inputs(utxo)
-        rawtx_outputs = create_outputs(utxo, from_scri, to_pub_amount_dict)
-        rawtx_end = create_end()
-        return rawtx_inputs + rawtx_outputs + rawtx_end, amount*100000000
-    
-    raise Exception("UTXO not usable")
-    return  "No usable utxo was found", 0

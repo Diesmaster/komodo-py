@@ -94,3 +94,35 @@ class Explorer:
         except Exception as e:
             raise Exception(e)
 
+
+    def broadcast_via_explorer( self, signedtx ):
+        #print("start broadcast_via_explorer")
+
+        if type(self.url) is not str:
+            print("Explorer URL must be string")
+            raise Exception("Explorer URL must be string")
+
+        if type(signedtx) is not str:
+            print("SignedTX must be string")
+            raise Exception("SignedTX must be string")
+
+        full_url = self.url + self.root + self.transaction + self.send
+        params = {'rawtx': signedtx}
+        print("PARAMS: " + str(params))
+        print("Broadcast via " + full_url)
+
+        try:
+            broadcast_res = requests.post(full_url, data=params)
+            if len(broadcast_res.text) < 64: # TODO check if json, then if the json has a txid field and it is 64
+                raise Exception(broadcast_res.text)
+            else:
+                return json.loads(broadcast_res.text)
+
+        except Exception as e:
+            print(str(broadcast_res.text))
+            # log2discord(f"---\nThere is an exception during the broadcast: **{params}**\n Error: **{e}**\n---")
+            print("rawtx: " + str(signedtx))
+            # log2discord(rawtx_text)
+            print("broadcast_via_explorer " + str(e))
+            raise(e)
+

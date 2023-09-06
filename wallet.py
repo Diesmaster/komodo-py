@@ -1,9 +1,10 @@
 #from sympy import Point, Integer
 from ecpy.curves     import Curve,Point
-
+import ecdsa
 
 import hashlib
 import math
+import transaction
 
 ## utils
 def r160( data ):
@@ -96,9 +97,12 @@ class Wallet:
 
 		#modiciations to make it an address
 		hashpubkey = r160(publicPointSerialized)
+		print(hashpubkey.hex())
 		versionPlusHash = versionByte + hashpubkey
+		print(versionPlusHash.hex())
 		checksum = s256(s256(versionPlusHash))[:4]
 		total = versionPlusHash + checksum
+		print(total.hex())
 		address = self.base58Iguana(total)
 
 		#returned address
@@ -182,3 +186,8 @@ class Wallet:
 
 		return completeArray
 
+	def get_address( self ):
+		return self.address
+
+	def get_scriptpubkkey( self ):
+		return self.base58DecodeIguana(self.address)[1:-4].hex()
