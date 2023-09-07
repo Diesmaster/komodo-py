@@ -18,4 +18,6 @@ tx = transaction.make_address_transaction( ex, wal, "RGKg9LCmU5i9JL2PceLbhM9HenH
 
 print( tx )
 
-ex.broadcast_via_explorer( tx )
+print(tx.serialize_sign_precurser())
+
+#ex.broadcast_via_explorer( tx )

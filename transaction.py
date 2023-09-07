@@ -2,6 +2,8 @@ import hashlib
 import time
 import json
 
+from pyblake2 import blake2b
+
 # Class for Transaction Inputs
 class TxIn:
     def __init__(self, prev_tx_id, amount, vout, script_pubkey):
@@ -23,11 +25,14 @@ class Transaction:
         self.version_group_id="85202f89"
         self.list_unspend=0
         self.end_marking="00ffffffff"
+        self.sequences = "ffffffff"
         self.script_pubkey = script_pubkey
         date = int(time.time())
-        self.nlocktime = bytes.fromhex(format(date, '08x'))[::-1].hex()
+        self.locktime = -1
         self.tx_outs = []
         self.tx_ins = []
+        self.rawtx = ""
+        self.overwintered = True
 
     def __str__(self):
         # Fetching attributes and their values as a dictionary
@@ -61,28 +66,22 @@ class Transaction:
         rawtx = rawtx + "01"
         rawtx= rawtx + rev_txid + rev_vout + self.end_marking
 
+        self.serialize = rawtx
         return rawtx
 
-    def serialize_inputs_sign( self ):
+    def serialize_input_sign( self ):
+
+        #txid
         reversed_bytes = bytes.fromhex(self.tx_ins[0].prev_tx_id)[::-1]
         rev_txid = reversed_bytes.hex()
 
-        #rev vout
-        # Convert vout to a hexadecimal string with 8 digits
+        #vout
         vout_hex = format(self.tx_ins[0].vout, '08x')
-
-        # Reverse byte order
         rev_vout = bytes.fromhex(vout_hex)[::-1].hex()
 
-        scriptkey = self.tx_ins[0].script_pubkey
-    
-        #start raw tx
-        rawtx= self.version #+ self.version_group_id # tx version
+        return rev_txid + rev_vout
 
-        rawtx = rawtx + "01" #amount of inputs is 1
-        rawtx= rawtx + rev_txid + rev_vout + len(scriptkey)//2 + scriptkey + self.end_marking
 
-        return rawtx
 
     def serialize_outputs(self):
         rawtx = ""
@@ -111,18 +110,22 @@ class Transaction:
 
         return rawtx
 
-    def serialize_outputs_sign( self ):
+    def serialize_end_sign( self ):
         rawtx = ""
         n_outputs = len(self.tx_outs)
 
         if n_outputs < 252:
-            outputCount = format(n_outputs + 1, '02x')
-            rawtx += outputCount
+            #outputCount = format(n_outputs + 1, '02x')
+            #rawtx += outputCount
             total_amount = 0
 
+
+
             for tx_out in self.tx_outs:
+                print("val: " + str(tx_out.value))
                 amount = bytes.fromhex(format(tx_out.value, '016x'))[::-1].hex()
-                rawtx += f"{amount}2321{tx_out.pub_key}ac"
+                print(tx_out.pub_key)
+                rawtx += f"{amount}1976a914{tx_out.pub_key}88ac"
                 total_amount += tx_out.value
 
             change = self.get_ins_total() - total_amount
@@ -137,6 +140,7 @@ class Transaction:
     def serialize_end( self ):
         date = int(time.time())
         nlocktime = bytes.fromhex(format(date, '08x'))[::-1].hex()
+        self.locktime = nlocktime
         rawtx = nlocktime
         rawtx = rawtx + "000000000000000000000000000000"
         return rawtx
@@ -168,6 +172,75 @@ class Transaction:
         tx = TxOut(value, to_scriptpubkey)
         self.tx_outs.append(tx)
 
+    def get_script_code( self ):
+        return "76a914" + self.tx_ins[0].script_pubkey + "88ac"
+
+    def var_int(self, i):
+        # https://en.bitcoin.it/wiki/Protocol_specification#Variable_length_integer
+        if i<0xfd:
+            return bytes.fromhex(format(i, '08x'))[::-1].hex()[:2]
+        elif i<=0xffff:
+            return "fd"+bytes.fromhex(format(i, '08x'))[::-1].hex()[:2]
+        elif i<=0xffffffff:
+            return "fe"+bytes.fromhex(format(i, '08x'))[::-1].hex()[:4]
+        else:
+            return "ff"+bytes.fromhex(format(i, '08x'))[::-1].hex()[:8]
+
+
+    def serialize_sign_precurser( self ):
+        #TODO replace hard coded strings with the names of the op_codes
+        
+        nVersion = self.version #bytes.fromhex(format(self.version, '016x'))[::-1].hex()
+        nHashType = bytes.fromhex(format(1, '016x'))[::-1].hex()[:8]
+        nVersionGroupId = self.version_group_id
+        nLocktime = self.locktime #bytes.fromhex(format(self.locktime, '016x'))[::-1].hex()
+        
+        txins = self.serialize_inputs()
+        txouts = self.serialize_outputs()
+
+        if self.overwintered == True:
+            hashJoinSplits = '00'*32
+            hashShieldedSpends = '00'*32
+            hashShieldedOutputs = '00'*32
+
+            txins = self.serialize_input_sign()
+            txouts = self.serialize_end_sign()
+
+
+            hashPrevouts = blake2b(bytes.fromhex(txins), digest_size=32, person=b'ZcashPrevoutHash').hexdigest()
+            hashSequance = blake2b(bytes.fromhex(self.sequences), digest_size=32, person=b'ZcashSequencHash').hexdigest()
+            hashOutputs = blake2b(bytes.fromhex(txouts), digest_size=32, person=b'ZcashOutputsHash').hexdigest()
+
+            nExpiryHeight = "00000000"
+            nValueBalance = "0000000000000000"
+
+            #TODO: op codes still attached to pubkey
+            preimage_script = self.tx_ins[0].script_pubkey
+
+            #length = bytes.fromhex(format(len(preimage_script)  // 2, '08x'))[::-1].hex()
+            scriptCode = str(self.var_int( len(preimage_script) // 2 )) + preimage_script
+
+            val = hex(self.tx_outs[0].value)[2:].rstrip('L')
+            print(val)
+            val = "0"*(2*8 - len(val)) + val
+            print(val)
+            val = bytes.fromhex(val)[::-1].hex()
+            print(val)
+            print("amount: " + val)
+
+
+
+            preimage = nVersion + nVersionGroupId + hashPrevouts + hashSequance + hashOutputs + hashJoinSplits + hashShieldedSpends + hashShieldedOutputs + nLocktime + nExpiryHeight + nValueBalance + nHashType + self.serialize_input_sign() + scriptCode + val +  self.sequences
+
+        else:
+            # Check if transaction is overwintered
+            
+
+            # Construct the preimage for non-overwintered transactions
+            preimage = nVersion + txins + txouts + nLocktime + nHashType
+
+        return preimage
+
 def find_utxo( utxos, amount ):
     for utxo in utxos:
         if utxo['amount'] > amount and utxo['confirmations']:
@@ -194,72 +267,5 @@ def make_address_transaction( ex, wal, to_address, amount ):
     tx.add_input( utxo['txid'], utxo['amount'], utxo['vout'], utxo['scriptPubKey'])
 
     ser_tx = tx.serialize()
-    return ser_tx
 
-def serialize_sign_precurser( self ):
-    # Check if transaction is overwintered
-    overwintered = self.overwintered
-    version = self.version
-
-    # Create hash type and lock time in hexadecimal
-    nHashType = int_to_hex(1, 4)
-    nLocktime = int_to_hex(self.locktime, 4)
-
-    # Serialize inputs and outputs
-    inputs = self.inputs()
-    outputs = self.outputs()
-    txin = inputs[i]
-
-
-    # deactivate overwintered support
-    overwintered = False
-
-    # Check for overwintered transactions RN no support
-    if overwintered:
-        # Prepare overwintered specific headers and version group ID
-        nVersion = int_to_hex(0x80000000 | self.version, 4)
-        nVersionGroupId = int_to_hex(self.version_group_id, 4)
-
-        # Generate hash for previous outputs, sequences, and outputs
-        s_prevouts = bfh(''.join(self.serialize_outpoint(txin) for txin in inputs))
-        hashPrevouts = blake2b(s_prevouts, digest_size=32, person=b'ZcashPrevoutHash').hexdigest()
-        s_sequences = bfh(''.join(int_to_hex(txin.get('sequence', 0xffffffff - 1), 4) for txin in inputs))
-        hashSequence = blake2b(s_sequences, digest_size=32, person=b'ZcashSequencHash').hexdigest()
-        s_outputs = bfh(''.join(self.serialize_output(o) for o in outputs))
-        hashOutputs = blake2b(s_outputs, digest_size=32, person=b'ZcashOutputsHash').hexdigest()
-
-        # Initialize joinSplits, hashShieldedSpends, and hashShieldedOutputs
-        hashJoinSplits = '00'*32
-        hashShieldedSpends = '00'*32
-        hashShieldedOutputs = '00'*32
-
-        # Prepare expiry height and value balance
-        nExpiryHeight = int_to_hex(self.expiryHeight, 4)
-        nValueBalance = int_to_hex(self.valueBalance, 8)
-
-        # Get preimage script for the input
-        preimage_script = self.get_preimage_script(txin)
-        scriptCode = var_int(len(preimage_script) // 2) + preimage_script
-
-        # Construct the preimage with all the components
-        preimage = (
-            nHeader + nVersionGroupId + hashPrevouts + hashSequence + hashOutputs
-            + hashJoinSplits + hashShieldedSpends + hashShieldedOutputs + nLocktime
-            + nExpiryHeight + nValueBalance + nHashType
-            + self.serialize_outpoint(txin)
-            + scriptCode
-            + int_to_hex(txin['value'], 8)
-            + int_to_hex(txin.get('sequence', 0xffffffff - 1), 4)
-        )
-    else:
-        # Prepare headers for non-overwintered transactions
-        nVersion = int_to_hex(self.version, 4)
-        
-        txins = var_int(len(inputs)) + ''.join(self.serialize_input(txin, self.get_preimage_script(txin) if i==k else '') for k, txin in enumerate(inputs))
-
-        txouts = var_int(len(outputs)) + ''.join(self.serialize_output(o) for o in outputs)
-
-        # Construct the preimage for non-overwintered transactions
-        preimage = nVersion + txins + txouts + nLocktime + nHashType
-
-    return preimage
+    return tx
