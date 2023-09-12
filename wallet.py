@@ -2,6 +2,8 @@
 from ecpy.curves     import Curve,Point
 import ecdsa
 
+#from ecdsa.ecdh
+
 import hashlib
 import math
 import transaction
@@ -97,12 +99,11 @@ class Wallet:
 
 		#modiciations to make it an address
 		hashpubkey = r160(publicPointSerialized)
-		print(hashpubkey.hex())
 		versionPlusHash = versionByte + hashpubkey
-		print(versionPlusHash.hex())
+
 		checksum = s256(s256(versionPlusHash))[:4]
 		total = versionPlusHash + checksum
-		print(total.hex())
+
 		address = self.base58Iguana(total)
 
 		#returned address
@@ -191,3 +192,9 @@ class Wallet:
 
 	def get_scriptpubkkey( self ):
 		return self.base58DecodeIguana(self.address)[1:-4].hex()
+
+	def get_sign_key( self ):
+		return ecdsa.SigningKey.from_string(bytes.fromhex(self.priv_key), curve=ecdsa.SECP256k1)
+
+	def get_public_key( self ):
+		return self.pub_key

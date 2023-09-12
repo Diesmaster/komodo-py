@@ -11,13 +11,11 @@ ex = Explorer("https://ofcmvp.explorer.batch.events/")
 wal = Wallet("pact_image_wheat_cheese_model_daring_day_only_setup_cram_leave_good_limb_dawn_diagram_kind_orchard_pelican_chronic_repair_rack_oxygen_intact_vanish")
 print(wal.create_wallet())
 
-tx = transaction.make_address_transaction( ex, wal, "RGKg9LCmU5i9JL2PceLbhM9HenHmMzDU7i", 1 )
+rawtx = transaction.make_address_transaction( ex, wal, "RGKg9LCmU5i9JL2PceLbhM9HenHmMzDU7i", 1 )
 
-## will need to use the transaction.py thing
-## wal.sign_transaction( tx )
+#test="0400008085202f894f4781568efd573c8b86430d45bb8fea5237c0be9216bdd88a33ee911c677e63acddf3811d3f38ae44788d7ac28a22bb1d3cf3c24aff09f163c68e9d9dbb48260484b981184f90681b24d2381a130dc2f0a5f983a08ee69d6a1e2dad7c9e55c0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000612c00650000000000000000000000000100000048cf5bc93b1ae30ea32d9a2aa42dccf6f91dc7b61acbe1e5a245707bd14a9839010000001976a9144d4123fb365bdc0bc7dfa9c67dba0051b7edfafc88ac0100000000000000ffffffff"
 
-print( tx )
+print(tx)
 
-print(tx.serialize_sign_precurser())
-
-#ex.broadcast_via_explorer( tx )
+res = ex.broadcast_via_explorer( rawtx )
+print(res)

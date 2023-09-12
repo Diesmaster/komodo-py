@@ -1,8 +1,10 @@
 import hashlib
 import time
 import json
+import binascii
 
 from pyblake2 import blake2b
+import ecdsa
 
 # Class for Transaction Inputs
 class TxIn:
@@ -11,6 +13,8 @@ class TxIn:
         self.amount = int(amount*1e8)
         self.vout = int(vout)
         self.script_pubkey = script_pubkey
+        self.pub_key = ""
+        self.signature = ""
 
 # Class for Transaction Outputs
 class TxOut:
@@ -23,8 +27,9 @@ class Transaction:
     def __init__(self, script_pubkey=""):
         self.version="04000080"
         self.version_group_id="85202f89"
+        self.sapling_branch_id = "76b809bb"
         self.list_unspend=0
-        self.end_marking="00ffffffff"
+        self.end_marking="ffffffff"
         self.sequences = "ffffffff"
         self.script_pubkey = script_pubkey
         date = int(time.time())
@@ -58,15 +63,23 @@ class Transaction:
         # Reverse byte order
         rev_vout = bytes.fromhex(vout_hex)[::-1].hex()
         #print("Reversed vout_hex:", rev_vout)
-    
+
+        sig = ""
+        pub = ""
+        if not self.tx_ins[0].signature == "":
+            if len(self.tx_ins[0].signature) == 140:
+                sig = "6a47" + self.tx_ins[0].signature
+            else:
+                sig = "6b48" + self.tx_ins[0].signature
+            pub = "0121" + self.tx_ins[0].pub_key    
+
         #start raw tx
         rawtx= self.version + self.version_group_id # tx version
         #rawtx= rawtx +  #version group id
         # number of inputs (1, as we take one utxo from explorer listunspent)
         rawtx = rawtx + "01"
-        rawtx= rawtx + rev_txid + rev_vout + self.end_marking
+        rawtx= rawtx + rev_txid + rev_vout + sig + pub + self.end_marking
 
-        self.serialize = rawtx
         return rawtx
 
     def serialize_input_sign( self ):
@@ -95,14 +108,11 @@ class Transaction:
 
 
             for tx_out in self.tx_outs:
-                print("val: " + str(tx_out.value))
                 amount = bytes.fromhex(format(tx_out.value, '016x'))[::-1].hex()
-                print(tx_out.pub_key)
                 rawtx += f"{amount}1976a914{tx_out.pub_key}88ac"
                 total_amount += tx_out.value
 
             change = self.get_ins_total() - total_amount
-            print(f"change: {change}")
             change_value = bytes.fromhex(format(change, '016x'))[::-1].hex()
             rawtx += change_value
 
@@ -122,14 +132,11 @@ class Transaction:
 
 
             for tx_out in self.tx_outs:
-                print("val: " + str(tx_out.value))
                 amount = bytes.fromhex(format(tx_out.value, '016x'))[::-1].hex()
-                print(tx_out.pub_key)
                 rawtx += f"{amount}1976a914{tx_out.pub_key}88ac"
                 total_amount += tx_out.value
 
             change = self.get_ins_total() - total_amount
-            print(f"change: {change}")
             change_value = bytes.fromhex(format(change, '016x'))[::-1].hex()
             rawtx += change_value
 
@@ -220,17 +227,15 @@ class Transaction:
             #length = bytes.fromhex(format(len(preimage_script)  // 2, '08x'))[::-1].hex()
             scriptCode = str(self.var_int( len(preimage_script) // 2 )) + preimage_script
 
-            val = hex(self.tx_outs[0].value)[2:].rstrip('L')
-            print(val)
+            #final amount
+            val = self.get_ins_total()
+            val = hex(val)[2:].rstrip('L')
             val = "0"*(2*8 - len(val)) + val
-            print(val)
+
+
             val = bytes.fromhex(val)[::-1].hex()
-            print(val)
-            print("amount: " + val)
 
-
-
-            preimage = nVersion + nVersionGroupId + hashPrevouts + hashSequance + hashOutputs + hashJoinSplits + hashShieldedSpends + hashShieldedOutputs + nLocktime + nExpiryHeight + nValueBalance + nHashType + self.serialize_input_sign() + scriptCode + val +  self.sequences
+            preimage = nVersion + nVersionGroupId + hashPrevouts + hashSequance + hashOutputs + hashJoinSplits + hashShieldedSpends + hashShieldedOutputs + nLocktime + nExpiryHeight + nValueBalance + nHashType + txins + scriptCode + val +  self.sequences
 
         else:
             # Check if transaction is overwintered
@@ -240,6 +245,31 @@ class Transaction:
             preimage = nVersion + txins + txouts + nLocktime + nHashType
 
         return preimage
+
+    def signtx( self, sig_key, pub_key ):
+        preimage = self.serialize_sign_precurser()
+
+        if self.overwintered == True:
+            data = bytes.fromhex(preimage)
+            person = b'ZcashSigHash' + bytes.fromhex(self.sapling_branch_id)[::-1] #.to_bytes(4, 'little')
+            pre_hash = blake2b(data, digest_size=32, person=person).digest()
+
+
+        print("#### IETS GEBEURT HIER")
+
+        print(binascii.hexlify(pre_hash).decode('ascii'))
+                
+        sig = sig_key.sign_digest_deterministic(pre_hash, hashfunc=hashlib.sha256, sigencode = ecdsa.util.sigencode_der_canonize)
+        sig = binascii.hexlify(sig).decode('ascii')
+
+        print(sig)
+
+        print("### END")
+
+        self.tx_ins[0].signature = sig
+        self.tx_ins[0].pub_key = pub_key
+        return sig    
+
 
 def find_utxo( utxos, amount ):
     for utxo in utxos:
@@ -251,7 +281,6 @@ def make_address_transaction( ex, wal, to_address, amount ):
     address = wal.get_address()
     to_scriptpubkey = wal.base58DecodeIguana(to_address).hex()[2:-8]
 
-    print(to_scriptpubkey)
 
     from_scriptpubkey = wal.get_scriptpubkkey()
 
@@ -261,11 +290,16 @@ def make_address_transaction( ex, wal, to_address, amount ):
     utxos = json.loads(ex.get_utxos( address ))
     utxo = find_utxo( utxos, 1 )
 
-    print(utxo)
-    print(wal.get_scriptpubkkey())
 
     tx.add_input( utxo['txid'], utxo['amount'], utxo['vout'], utxo['scriptPubKey'])
 
     ser_tx = tx.serialize()
 
-    return tx
+
+    sig_key = wal.get_sign_key()
+    pub_key = wal.get_public_key()
+    tx.signtx(sig_key, pub_key)
+
+    ser_tx = tx.serialize()
+
+    return ser_tx
