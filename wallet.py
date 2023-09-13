@@ -6,7 +6,8 @@ import ecdsa
 
 import hashlib
 import math
-import transaction
+from transaction import TxInterface
+from explorer import Explorer
 
 ## utils
 def r160( data ):
@@ -198,3 +199,27 @@ class Wallet:
 
 	def get_public_key( self ):
 		return self.pub_key
+
+
+class WalletInterface:
+	def __init__(self, ex_url, seed):
+		self.ex = Explorer(ex_url)
+		self.wal = Wallet(seed)
+
+	def get_address( self ):
+		return self.wal.get_address()
+
+	def make_address_transaction( self, to_address, amount ):
+		tx_in = TxInterface(self.ex, self.wal)
+		res = tx_in.make_address_transaction( to_address, amount )
+		return res
+
+	def send_tx( self, to_address, amount ):
+		tx_in = TxInterface(self.ex, self.wal)
+		res = tx_in.send_tx( to_address, amount )
+		return res
+
+	def send_tx_force( self, to_address, amount ):
+		tx_in = TxInterface(self.ex, self.wal)
+		res = tx_in.send_tx_force( to_address, amount )
+		return res
