@@ -22,6 +22,13 @@ class TxOut:
         self.value = int(value*1e8)
         self.pub_key = pub_key
 
+    def __str__( self ):
+
+        # Fetching attributes and their values as a dictionary
+        attrs = vars(self)
+        # Formatting the dictionary into string form
+        return ',\n'.join(f"{key} = {value}" for key, value in attrs.items())
+
 # Class for Transaction
 class Transaction:
     def __init__(self, script_pubkey=""):
@@ -278,14 +285,29 @@ def find_utxo( utxos, amount ):
 
 
 def make_address_transaction( ex, wal, to_address, amount ):
+    if isinstance(to_address, list) and not isinstance(amount, list):
+        return "needs to be the same type"
+
     address = wal.get_address()
-    to_scriptpubkey = wal.base58DecodeIguana(to_address).hex()[2:-8]
 
 
     from_scriptpubkey = wal.get_scriptpubkkey()
 
     tx = Transaction(from_scriptpubkey)
-    tx.add_output( amount, to_scriptpubkey )
+
+    if isinstance(to_address, list) == True:
+        print(" ### test ### ")
+        for x in range(0, len(to_address)):
+            print(to_address[x])
+            to_scriptpubkey = wal.base58DecodeIguana(to_address[x]).hex()[2:-8]
+            tx.add_output( amount[x], to_scriptpubkey )
+
+        for out in tx.tx_outs:
+            print(out)
+    else:
+        print("### not list? ### ")
+        to_scriptpubkey = wal.base58DecodeIguana(to_address).hex()[2:-8]
+        tx.add_output( amount, to_scriptpubkey )
 
     utxos = json.loads(ex.get_utxos( address ))
     utxo = find_utxo( utxos, 1 )
