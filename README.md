@@ -18,8 +18,9 @@ This function returns the address of the wallet, so you can send funds to this w
 		 				or a int if you want to send to 1
 		 Number is always in full coins not in sats
 		 to_address and to amount need to be of the same type
+@return:
 
-this functions returns a signed raw transaction to the addresses  
+	this functions returns a signed raw transaction to the addresses  
 
 
 ## def send_tx( self, to_address, amount ):
@@ -31,7 +32,9 @@ this functions returns a signed raw transaction to the addresses
 		 				or a int if you want to send to 1
 		 Number is always in full coins not in sats
 		 to_address and to amount need to be of the same type
-this functions returns a txid if it sucsesfully broadcasted the transaction or raise a exception if there were issues.
+@return:
+
+	this functions returns a txid if it sucsesfully broadcasted the transaction or raise a exception if there were issues.
 
 ## def send_tx_force( self, to_address, amount ):
 @params: 
@@ -42,4 +45,6 @@ this functions returns a txid if it sucsesfully broadcasted the transaction or r
 		 				or a int if you want to send to 1
 		 Number is always in full coins not in sats
 		 to_address and to amount need to be of the same type
-this functions returns a txid when it sucsesfully broadcasted the transaction, untill it broadcasted the transaction it will loop over all the utxos in the wallet to try them 1 by 1.
+@return:
+
+	this functions returns a txid when it sucsesfully broadcasted the transaction, untill it broadcasted the transaction it will loop over all the utxos in the wallet to try them 1 by 1.
