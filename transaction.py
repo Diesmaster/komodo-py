@@ -2,6 +2,7 @@ import hashlib
 import time
 import json
 import binascii
+import time
 
 from pyblake2 import blake2b
 import ecdsa
@@ -296,42 +297,87 @@ def find_utxo( utxos, amount ):
 
 
 
-def make_address_transaction( ex, wal, to_address, amount ):
-    if isinstance(to_address, list) and not isinstance(amount, list):
-        return "needs to be the same type"
+class TxInterface:
+    def __init__(self, ex, wal):
+        self.ex = ex 
+        self.wal = wal
 
-    address = wal.get_address()
-
-
-    from_scriptpubkey = wal.get_scriptpubkkey()
-
-    tx = Transaction(from_scriptpubkey)
-
-    if isinstance(to_address, list) == True:
-        for x in range(0, len(to_address)):
-            print(to_address[x])
-            to_scriptpubkey = wal.base58DecodeIguana(to_address[x]).hex()[2:-8]
-            tx.add_output( amount[x], to_scriptpubkey )
-
-        for out in tx.tx_outs:
-            print(out)
-    else:
-        to_scriptpubkey = wal.base58DecodeIguana(to_address).hex()[2:-8]
-        tx.add_output( amount, to_scriptpubkey )
-
-    utxos = json.loads(ex.get_utxos( address ))
-    utxo = find_utxo( utxos, 1 )
+    def get_tx( self, to_address, amount ):
+        address = self.wal.get_address()
 
 
-    tx.add_input( utxo['txid'], utxo['amount'], utxo['vout'], utxo['scriptPubKey'])
+        from_scriptpubkey = self.wal.get_scriptpubkkey()
 
-    ser_tx = tx.serialize()
+        tx = Transaction(from_scriptpubkey)
+
+        if isinstance(to_address, list) == True:
+            for x in range(0, len(to_address)):
+                print(to_address[x])
+                to_scriptpubkey = self.wal.base58DecodeIguana(to_address[x]).hex()[2:-8]
+                tx.add_output( amount[x], to_scriptpubkey )
+
+            for out in tx.tx_outs:
+                print(out)
+        else:
+            to_scriptpubkey = self.wal.base58DecodeIguana(to_address).hex()[2:-8]
+            tx.add_output( amount, to_scriptpubkey )
+
+        return tx
+
+    def get_serialized_tx( self, tx ):
+        ser_tx = tx.serialize()
+        sig_key = self.wal.get_sign_key()
+        pub_key = self.wal.get_public_key()
+        tx.signtx(sig_key, pub_key)
+
+        ser_tx = tx.serialize()
+
+        return ser_tx        
+
+    def make_address_transaction( self, to_address, amount ):
+        if isinstance(to_address, list) and not isinstance(amount, list):
+            return "needs to be the same type"
+
+        address = self.wal.get_address()
+        tx = self.get_tx( to_address, amount )
+
+        utxos = json.loads(self.ex.get_utxos( address ))
+        utxo = find_utxo( utxos, 1 )
 
 
-    sig_key = wal.get_sign_key()
-    pub_key = wal.get_public_key()
-    tx.signtx(sig_key, pub_key)
+        tx.add_input( utxo['txid'], utxo['amount'], utxo['vout'], utxo['scriptPubKey'])
 
-    ser_tx = tx.serialize()
+        return self.get_serialized_tx(tx)
 
-    return ser_tx
+    def send_tx( self, to_address, amount ):
+        if isinstance(to_address, list) and not isinstance(amount, list):
+            return "needs to be the same type"
+
+        rawtx = self.make_address_transaction( to_address, amount )
+        res = self.ex.broadcast_via_explorer( rawtx )
+        return res
+
+    def send_tx_force( self, to_address, amount ):
+        if isinstance(to_address, list) and not isinstance(amount, list):
+                return "needs to be the same type"
+
+        address = self.wal.get_address()
+        tx = self.get_tx( to_address, amount )
+
+        utxos = json.loads(self.ex.get_utxos( address ))
+
+        for utxo in utxos:
+            tx.add_input( utxo['txid'], utxo['amount'], utxo['vout'], utxo['scriptPubKey'])
+
+            rawtx = self.get_serialized_tx(tx)
+            
+
+
+            try:
+                res = self.ex.broadcast_via_explorer( rawtx )
+                if 'txid' in res:
+                    return res        
+            except:
+                pass
+
+            time.sleep(1)

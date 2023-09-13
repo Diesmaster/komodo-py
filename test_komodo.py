@@ -398,7 +398,7 @@ def test_serialize_inputs( ):
 
     assert ser_in[:18] == "0400008085202f8901"
     assert ser_in[-8:] == "ffffffff"
-    assert len(ser_in) == 80
+    assert len(ser_in) == 98
 
 @pytest.mark.parametrize("amount", [1, 20, 300, 1000])
 def test_find_utxo( amount):
@@ -424,7 +424,9 @@ def test_make_address_transaction( to_addie, amount ):
 
     wal = Wallet("pact_image_wheat_cheese_model_daring_day_only_setup_cram_leave_good_limb_dawn_diagram_kind_orchard_pelican_chronic_repair_rack_oxygen_intact_vanish")
 
-    rawtx = make_address_transaction( ex, wal, to_addie, amount )
+    tx_in = TxInterface(ex, wal)
+
+    rawtx = tx_in.make_address_transaction( ["RA6kFZkA3oVrQjPGbuoxmZDaHvMp9sMhgg", "RFuBZNJCWiwW7a7TradLPLvwymooPRzsGR"], [1, 1] )
 
     try :
         res = ex.broadcast_via_explorer( rawtx )
