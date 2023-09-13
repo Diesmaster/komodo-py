@@ -365,19 +365,24 @@ class TxInterface:
         tx = self.get_tx( to_address, amount )
 
         utxos = json.loads(self.ex.get_utxos( address ))
+   
+        total_amount = 0
+        if isinstance(to_address, list):
+            for n_value in amount:
+                total_amount += n_value
+        else:
+            total_amount = amount
 
         for utxo in utxos:
-            tx.add_input( utxo['txid'], utxo['amount'], utxo['vout'], utxo['scriptPubKey'])
+            if utxo['amount'] >= total_amount:
+                tx.add_input( utxo['txid'], utxo['amount'], utxo['vout'], utxo['scriptPubKey'])
+                rawtx = self.get_serialized_tx(tx)
 
-            rawtx = self.get_serialized_tx(tx)
-            
+                try:
+                    res = self.ex.broadcast_via_explorer( rawtx )
+                    if 'txid' in res:
+                        return res        
+                except:
+                    pass
 
-
-            try:
-                res = self.ex.broadcast_via_explorer( rawtx )
-                if 'txid' in res:
-                    return res        
-            except:
-                pass
-
-            time.sleep(1)
+                time.sleep(1)
