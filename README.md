@@ -11,6 +11,7 @@ This function returns the address of the wallet, so you can send funds to this w
 
 ## def make_address_transaction( self, to_address, amount ):
 @params: 
+		
 		to_address:	array of address if you want a send many
 					 	or string if you want to send to 1 address
 		 amount:		array of amounts if you want a send many
@@ -23,6 +24,7 @@ this functions returns a signed raw transaction to the addresses
 
 ## def send_tx( self, to_address, amount ):
 @params: 
+		
 		to_address:	array of address if you want a send many
 					 	or string if you want to send to 1 address
 		 amount:		array of amounts if you want a send many
@@ -33,6 +35,7 @@ this functions returns a txid if it sucsesfully broadcasted the transaction or r
 
 ## def send_tx_force( self, to_address, amount ):
 @params: 
+		
 		to_address:	array of address if you want a send many
 					 	or string if you want to send to 1 address
 		 amount:		array of amounts if you want a send many
