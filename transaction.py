@@ -261,9 +261,6 @@ class Transaction:
             person = b'ZcashSigHash' + bytes.fromhex(self.sapling_branch_id)[::-1] #.to_bytes(4, 'little')
             pre_hash = blake2b(data, digest_size=32, person=person).digest()
 
-
-        print("#### IETS GEBEURT HIER")
-
         print(binascii.hexlify(pre_hash).decode('ascii'))
                 
         sig = sig_key.sign_digest_deterministic(pre_hash, hashfunc=hashlib.sha256, sigencode = ecdsa.util.sigencode_der_canonize)
@@ -271,17 +268,17 @@ class Transaction:
 
         print(sig)
 
-        print("### END")
-
         self.tx_ins[0].signature = sig
         self.tx_ins[0].pub_key = pub_key
         return sig    
+
 
 
 def find_utxo( utxos, amount ):
     for utxo in utxos:
         if utxo['amount'] > amount and utxo['confirmations']:
             return utxo
+
 
 
 def make_address_transaction( ex, wal, to_address, amount ):
@@ -296,7 +293,6 @@ def make_address_transaction( ex, wal, to_address, amount ):
     tx = Transaction(from_scriptpubkey)
 
     if isinstance(to_address, list) == True:
-        print(" ### test ### ")
         for x in range(0, len(to_address)):
             print(to_address[x])
             to_scriptpubkey = wal.base58DecodeIguana(to_address[x]).hex()[2:-8]
@@ -305,7 +301,6 @@ def make_address_transaction( ex, wal, to_address, amount ):
         for out in tx.tx_outs:
             print(out)
     else:
-        print("### not list? ### ")
         to_scriptpubkey = wal.base58DecodeIguana(to_address).hex()[2:-8]
         tx.add_output( amount, to_scriptpubkey )
 

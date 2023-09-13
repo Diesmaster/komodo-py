@@ -7,6 +7,8 @@ from ecpy.curves     import Curve,Point
 from unittest.mock import patch, Mock
 from explorer import Explorer  
 from wallet import Wallet
+from transaction import *
+
 
 @pytest.fixture
 def mock_response():
@@ -94,11 +96,6 @@ def test_get_network_status(mock_response):
         ex = Explorer("https://ofcmvp.explorer.batch.events/")  # Initialize your class
 
         result = ex.get_network_status()
-
-        print("##### mock #####")
-        print(mock_response)
-        print("##### resp #####")
-        print(result)
 
         assert result == mock_response
 
@@ -215,3 +212,225 @@ def test_create_wallet(seed, expected):
     wallet = Wallet(seed)
     result = wallet.create_wallet()
     assert result == expected
+
+
+def test_serialize_outputs( ):
+    tx = Transaction( )
+    ex = Explorer("https://ofcmvp.explorer.batch.events/")
+
+    wal = Wallet("pact_image_wheat_cheese_model_daring_day_only_setup_cram_leave_good_limb_dawn_diagram_kind_orchard_pelican_chronic_repair_rack_oxygen_intact_vanish")
+
+    to_address =  "RGKg9LCmU5i9JL2PceLbhM9HenHmMzDU7i" 
+    amount = 1
+
+    address = wal.get_address()
+
+
+    from_scriptpubkey = wal.get_scriptpubkkey()
+
+    tx = Transaction(from_scriptpubkey)
+
+    if isinstance(to_address, list) == True:
+        for x in range(0, len(to_address)):
+            print(to_address[x])
+            to_scriptpubkey = wal.base58DecodeIguana(to_address[x]).hex()[2:-8]
+            tx.add_output( amount[x], to_scriptpubkey )
+
+        for out in tx.tx_outs:
+            print(out)
+    else:
+        to_scriptpubkey = wal.base58DecodeIguana(to_address).hex()[2:-8]
+        tx.add_output( amount, to_scriptpubkey )
+
+    utxos = json.loads(ex.get_utxos( address ))
+    utxo = find_utxo( utxos, 1 )
+
+
+    tx.add_input( utxo['txid'], utxo['amount'], utxo['vout'], utxo['scriptPubKey'])
+
+    ser_tx = tx.serialize_outputs()
+    print(ser_tx)
+
+    n_outputs = integer_value = int(ser_tx[:2], 16)
+    ser_tx = ser_tx[2:]
+
+    assert n_outputs < 252
+
+    for n in range(0, n_outputs):
+        amount = ser_tx[:16]
+        ser_tx = ser_tx[16:]
+
+        script = ser_tx[:8]
+        ser_tx = ser_tx[8:]
+        assert script == "1976a914"
+
+        key = ser_tx[:40]
+        ser_tx = ser_tx[40:]
+        assert key == wal.get_scriptpubkkey()
+
+
+        script_key_script = ser_tx[:4]
+        ser_tx = ser_tx[4:]
+        assert script_key_script == "88ac"    
+
+
+def test_serialize_sign_precursor( ):
+    tx = Transaction( )
+    ex = Explorer("https://ofcmvp.explorer.batch.events/")
+
+    wal = Wallet("pact_image_wheat_cheese_model_daring_day_only_setup_cram_leave_good_limb_dawn_diagram_kind_orchard_pelican_chronic_repair_rack_oxygen_intact_vanish")
+
+    to_address =  "RGKg9LCmU5i9JL2PceLbhM9HenHmMzDU7i" 
+    amount = 1
+
+    address = wal.get_address()
+
+
+    from_scriptpubkey = wal.get_scriptpubkkey()
+
+    tx = Transaction(from_scriptpubkey)
+
+    if isinstance(to_address, list) == True:
+        for x in range(0, len(to_address)):
+            print(to_address[x])
+            to_scriptpubkey = wal.base58DecodeIguana(to_address[x]).hex()[2:-8]
+            tx.add_output( amount[x], to_scriptpubkey )
+
+        for out in tx.tx_outs:
+            print(out)
+    else:
+        to_scriptpubkey = wal.base58DecodeIguana(to_address).hex()[2:-8]
+        tx.add_output( amount, to_scriptpubkey )
+
+    utxos = json.loads(ex.get_utxos( address ))
+    utxo = find_utxo( utxos, 1 )
+
+
+    tx.add_input( utxo['txid'], utxo['amount'], utxo['vout'], utxo['scriptPubKey'])
+
+    ser_tx = tx.serialize()
+
+    ser_tx = tx.serialize_sign_precurser()    
+
+    header = ser_tx[:16]
+    ser_tx = ser_tx[16:]
+    assert header == "0400008085202f89"
+
+    hashes = ser_tx[:384]
+    ser_tx = ser_tx[384:]
+
+    locktime  = ser_tx[:8]
+    ser_tx = ser_tx[8:]
+
+    ex_hight_nvb = ser_tx[:24]
+    ser_tx = ser_tx[24:]
+
+    assert ex_hight_nvb == "000000000000000000000000"
+
+    hashtype = ser_tx[:8]
+    ser_tx = ser_tx[8:]
+    assert hashtype == "01000000"
+
+
+    txins_check = tx.serialize_input_sign()
+    n = len(txins_check)
+    txins = ser_tx[:n]
+    ser_tx = ser_tx[n:]
+    assert txins_check == txins
+
+    script = ser_tx[:8]
+    ser_tx = ser_tx[8:]
+    assert script == "1976a914"
+
+    key = ser_tx[:40]
+    ser_tx = ser_tx[40:]
+    assert key == wal.get_scriptpubkkey()
+    
+    script_key_script = ser_tx[:4]
+    ser_tx = ser_tx[4:]
+    assert script_key_script == "88ac" 
+
+    val = ser_tx[:16]
+    ser_tx = ser_tx[16:]
+    val = bytes.fromhex(val)[::-1].hex()
+    val = val.lstrip('0') # Removing the leading zeros
+    val = int(val, 16)
+    check_val = tx.get_ins_total()
+    assert check_val == val
+
+    assert ser_tx == "ffffffff"     
+
+def test_serialize_inputs( ):
+    tx = Transaction( )
+    ex = Explorer("https://ofcmvp.explorer.batch.events/")
+
+    wal = Wallet("pact_image_wheat_cheese_model_daring_day_only_setup_cram_leave_good_limb_dawn_diagram_kind_orchard_pelican_chronic_repair_rack_oxygen_intact_vanish")
+
+    to_address =  "RGKg9LCmU5i9JL2PceLbhM9HenHmMzDU7i" 
+    amount = 1
+
+    address = wal.get_address()
+
+
+    from_scriptpubkey = wal.get_scriptpubkkey()
+
+    tx = Transaction(from_scriptpubkey)
+
+    if isinstance(to_address, list) == True:
+        for x in range(0, len(to_address)):
+            print(to_address[x])
+            to_scriptpubkey = wal.base58DecodeIguana(to_address[x]).hex()[2:-8]
+            tx.add_output( amount[x], to_scriptpubkey )
+
+        for out in tx.tx_outs:
+            print(out)
+    else:
+        to_scriptpubkey = wal.base58DecodeIguana(to_address).hex()[2:-8]
+        tx.add_output( amount, to_scriptpubkey )
+
+    utxos = json.loads(ex.get_utxos( address ))
+    utxo = find_utxo( utxos, 1 )
+
+
+    tx.add_input( utxo['txid'], utxo['amount'], utxo['vout'], utxo['scriptPubKey'])
+
+    ser_in = tx.serialize_inputs()
+
+    assert ser_in[:18] == "0400008085202f8901"
+    assert ser_in[-8:] == "ffffffff"
+    assert len(ser_in) == 80
+
+@pytest.mark.parametrize("amount", [1, 20, 300, 1000])
+def test_find_utxo( amount):
+    ex = Explorer("https://ofcmvp.explorer.batch.events/")  # Initialize your class
+    test_address = 'RGKg9LCmU5i9JL2PceLbhM9HenHmMzDU7i'
+
+    result = ex.get_utxos(test_address)
+    utxo = find_utxo(json.loads(result), amount)
+
+    assert utxo['amount'] >= amount
+    assert utxo['confirmations'] >= 1
+
+
+
+@pytest.mark.parametrize("to_addie, amount", [
+    ("RGKg9LCmU5i9JL2PceLbhM9HenHmMzDU7i", 1),
+    (["RGKg9LCmU5i9JL2PceLbhM9HenHmMzDU7i"], [1]),
+    (["RA6kFZkA3oVrQjPGbuoxmZDaHvMp9sMhgg", "RFuBZNJCWiwW7a7TradLPLvwymooPRzsGR"], [1,1]),
+])
+def test_make_address_transaction( to_addie, amount ):
+    tx = Transaction( )
+    ex = Explorer("https://ofcmvp.explorer.batch.events/")
+
+    wal = Wallet("pact_image_wheat_cheese_model_daring_day_only_setup_cram_leave_good_limb_dawn_diagram_kind_orchard_pelican_chronic_repair_rack_oxygen_intact_vanish")
+
+    rawtx = make_address_transaction( ex, wal, to_addie, amount )
+
+    try :
+        res = ex.broadcast_via_explorer( rawtx )
+        assert json.loads(res)['txid']
+
+
+    except Exception as e:
+        assert e == Exception('. Code:-25')
+        #code 25 is that the explorer complains about spam
