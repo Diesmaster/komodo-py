@@ -6,6 +6,21 @@ import binascii
 from pyblake2 import blake2b
 import ecdsa
 
+class OpCodes:
+    OP_CHECKSIG = "ac"
+    OP_EQUALVERIFY = "88"
+    OP_DUP = "76"
+    OP_HASH160 = "a9"
+    OP_RETURN = "6a"
+    OP_TOALTSTACK = "6b"
+
+    PUSH_25 = "19"
+    PUSH_20 = "14"
+    PUSH_33 = "21" #(size of compressed key)
+    PUSH_71 = "47"
+    PUSH_72 = "48"
+
+
 # Class for Transaction Inputs
 class TxIn:
     def __init__(self, prev_tx_id, amount, vout, script_pubkey):
@@ -60,6 +75,8 @@ class Transaction:
         return amount
 
     def serialize_inputs( self ):
+        n_inputs = "01"
+
         reversed_bytes = bytes.fromhex(self.tx_ins[0].prev_tx_id)[::-1]
         rev_txid = reversed_bytes.hex()
 
@@ -75,17 +92,17 @@ class Transaction:
         pub = ""
         if not self.tx_ins[0].signature == "":
             if len(self.tx_ins[0].signature) == 140:
-                sig = "6a47" + self.tx_ins[0].signature
+                sig = OpCodes.OP_RETURN + OpCodes.PUSH_71 + self.tx_ins[0].signature
             else:
-                sig = "6b48" + self.tx_ins[0].signature
-            pub = "0121" + self.tx_ins[0].pub_key    
+                sig = OpCodes.OP_TOALTSTACK + OpCodes.PUSH_72 + self.tx_ins[0].signature
+            pub = n_inputs + OpCodes.PUSH_33 + self.tx_ins[0].pub_key    
 
         #start raw tx
         rawtx= self.version + self.version_group_id # tx version
         #rawtx= rawtx +  #version group id
         # number of inputs (1, as we take one utxo from explorer listunspent)
-        rawtx = rawtx + "01"
-        rawtx= rawtx + rev_txid + rev_vout + sig + pub + self.end_marking
+        rawtx = rawtx + n_inputs
+        rawtx = rawtx + rev_txid + rev_vout + sig + pub + self.end_marking
 
         return rawtx
 
@@ -116,14 +133,14 @@ class Transaction:
 
             for tx_out in self.tx_outs:
                 amount = bytes.fromhex(format(tx_out.value, '016x'))[::-1].hex()
-                rawtx += f"{amount}1976a914{tx_out.pub_key}88ac"
+                rawtx += str(amount) +  OpCodes.PUSH_25 + OpCodes.OP_DUP + OpCodes.OP_HASH160 + OpCodes.PUSH_20 + tx_out.pub_key + OpCodes.OP_EQUALVERIFY  + OpCodes.OP_CHECKSIG
                 total_amount += tx_out.value
 
             change = self.get_ins_total() - total_amount
             change_value = bytes.fromhex(format(change, '016x'))[::-1].hex()
             rawtx += change_value
 
-            rawtx += f"1976a914{self.script_pubkey}88ac"
+            rawtx += OpCodes.PUSH_25 + OpCodes.OP_DUP + OpCodes.OP_HASH160 + OpCodes.PUSH_20 + self.script_pubkey + OpCodes.OP_EQUALVERIFY + OpCodes.OP_CHECKSIG
 
         return rawtx
 
@@ -140,14 +157,14 @@ class Transaction:
 
             for tx_out in self.tx_outs:
                 amount = bytes.fromhex(format(tx_out.value, '016x'))[::-1].hex()
-                rawtx += f"{amount}1976a914{tx_out.pub_key}88ac"
+                rawtx += str(amount) + OpCodes.PUSH_25 + OpCodes.OP_DUP + OpCodes.OP_HASH160 + OpCodes.PUSH_20 + tx_out.pub_key + OpCodes.OP_EQUALVERIFY + OpCodes.OP_CHECKSIG
                 total_amount += tx_out.value
 
             change = self.get_ins_total() - total_amount
             change_value = bytes.fromhex(format(change, '016x'))[::-1].hex()
             rawtx += change_value
 
-            rawtx += f"1976a914{self.script_pubkey}88ac"
+            rawtx += OpCodes.PUSH_25 + OpCodes.OP_DUP + OpCodes.OP_HASH160 + OpCodes.PUSH_20 + self.script_pubkey + OpCodes.OP_EQUALVERIFY + OpCodes.OP_CHECKSIG
 
         return rawtx
 
@@ -187,7 +204,7 @@ class Transaction:
         self.tx_outs.append(tx)
 
     def get_script_code( self ):
-        return "76a914" + self.tx_ins[0].script_pubkey + "88ac"
+        return OpCodes.OP_DUP + Opcodes.OP_HASH160 + OpCodes.PUSH_20 + self.tx_ins[0].script_pubkey + OpCodes.OP_EQUALVERIFY + OpCodes.OP_CHECKSIG
 
     def var_int(self, i):
         # https://en.bitcoin.it/wiki/Protocol_specification#Variable_length_integer
@@ -202,8 +219,6 @@ class Transaction:
 
 
     def serialize_sign_precurser( self ):
-        #TODO replace hard coded strings with the names of the op_codes
-        
         nVersion = self.version #bytes.fromhex(format(self.version, '016x'))[::-1].hex()
         nHashType = bytes.fromhex(format(1, '016x'))[::-1].hex()[:8]
         nVersionGroupId = self.version_group_id
