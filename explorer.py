@@ -44,7 +44,7 @@ class Explorer:
             print("explorer_get_balance " + str(e))
             raise Exception(e)
 
-        return int(res.text)
+        return json.loads(res.text)
 
 
     def get_utxos( self, addr ):
@@ -64,7 +64,7 @@ class Explorer:
             raise Exception(e)
         
 
-        return res.text
+        return json.loads(res.text)
 
     def get_transaction( self, txid ):
         
@@ -81,7 +81,7 @@ class Explorer:
         
             print("explorer_get_transaction " + str(e))
             raise Exception(e)
-        return res.text
+        return json.loads(res.text)
 
     def get_network_status( self ):
         try:
@@ -116,7 +116,7 @@ class Explorer:
             if len(broadcast_res.text) < 64: # TODO check if json, then if the json has a txid field and it is 64
                 raise Exception(broadcast_res.text)
             else:
-                return broadcast_res.text
+                return json.loads(broadcast_res.text)
 
         except Exception as e:
             print(str(broadcast_res.__dict__))
