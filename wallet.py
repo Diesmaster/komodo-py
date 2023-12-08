@@ -6,8 +6,8 @@ import ecdsa
 
 import hashlib
 import math
-from transaction import TxInterface
-from explorer import Explorer
+from .transaction import TxInterface
+from .explorer import Explorer
 
 ## utils
 def r160( data ):
