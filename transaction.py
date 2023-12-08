@@ -341,7 +341,7 @@ class TxInterface:
         address = self.wal.get_address()
         tx = self.get_tx( to_address, amount )
 
-        utxos = json.loads(self.ex.get_utxos( address ))
+        utxos = self.ex.get_utxos( address )
         utxo = find_utxo( utxos, 1 )
 
 
@@ -364,7 +364,7 @@ class TxInterface:
         address = self.wal.get_address()
         tx = self.get_tx( to_address, amount )
 
-        utxos = json.loads(self.ex.get_utxos( address ))
+        utxos = self.ex.get_utxos( address )
    
         total_amount = 0
         if isinstance(to_address, list):
