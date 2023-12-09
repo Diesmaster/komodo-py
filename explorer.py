@@ -108,8 +108,8 @@ class Explorer:
 
         full_url = self.url + self.root + self.transaction + self.send
         params = {'rawtx': signedtx}
-        print("PARAMS: " + str(params))
-        print("Broadcast via " + full_url)
+        #print("PARAMS: " + str(params))
+        #print("Broadcast via " + full_url)
 
         try:
             broadcast_res = requests.post(full_url, data=params)

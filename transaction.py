@@ -195,6 +195,7 @@ class Transaction:
 
     # Method to add an input transaction
     def add_input(self, prev_tx_id, amount, vout, script_pubkey):
+        self.tx_ins = []
         tx = TxIn( prev_tx_id, amount, vout, script_pubkey )
         self.tx_ins.append(tx)
         self.list_unspend += 1
@@ -277,12 +278,12 @@ class Transaction:
             person = b'ZcashSigHash' + bytes.fromhex(self.sapling_branch_id)[::-1] #.to_bytes(4, 'little')
             pre_hash = blake2b(data, digest_size=32, person=person).digest()
 
-        print(binascii.hexlify(pre_hash).decode('ascii'))
+        #print(binascii.hexlify(pre_hash).decode('ascii'))
                 
         sig = sig_key.sign_digest_deterministic(pre_hash, hashfunc=hashlib.sha256, sigencode = ecdsa.util.sigencode_der_canonize)
         sig = binascii.hexlify(sig).decode('ascii')
 
-        print(sig)
+        #print(sig)
 
         self.tx_ins[0].signature = sig
         self.tx_ins[0].pub_key = pub_key
@@ -312,12 +313,10 @@ class TxInterface:
 
         if isinstance(to_address, list) == True:
             for x in range(0, len(to_address)):
-                print(to_address[x])
+                #print(to_address[x])
                 to_scriptpubkey = self.wal.base58DecodeIguana(to_address[x]).hex()[2:-8]
                 tx.add_output( amount[x], to_scriptpubkey )
 
-            for out in tx.tx_outs:
-                print(out)
         else:
             to_scriptpubkey = self.wal.base58DecodeIguana(to_address).hex()[2:-8]
             tx.add_output( amount, to_scriptpubkey )
