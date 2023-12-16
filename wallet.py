@@ -232,3 +232,8 @@ class WalletInterface:
 
 	def get_public_key( self ):
 		return self.wal.get_public_key()
+
+	def send_tx_opreturn( self, to_address, data ):
+		tx_in = TxInterface(self.ex, self.wal)
+		res = tx_in.send_tx_opreturn( to_address, data )
+		return res

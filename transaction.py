@@ -133,9 +133,25 @@ class Transaction:
 
 
             for tx_out in self.tx_outs:
-                amount = bytes.fromhex(format(tx_out.value, '016x'))[::-1].hex()
-                rawtx += str(amount) +  OpCodes.PUSH_25 + OpCodes.OP_DUP + OpCodes.OP_HASH160 + OpCodes.PUSH_20 + tx_out.pub_key + OpCodes.OP_EQUALVERIFY  + OpCodes.OP_CHECKSIG
-                total_amount += tx_out.value
+                if not tx_out.value == 0:
+                    amount = bytes.fromhex(format(tx_out.value, '016x'))[::-1].hex()
+                    rawtx += str(amount) +  OpCodes.PUSH_25 + OpCodes.OP_DUP + OpCodes.OP_HASH160 + OpCodes.PUSH_20 + tx_out.pub_key + OpCodes.OP_EQUALVERIFY  + OpCodes.OP_CHECKSIG
+                    total_amount += tx_out.value
+                else:
+                    change = self.get_ins_total() - total_amount
+                    change_value = bytes.fromhex(format(change, '016x'))[::-1].hex()
+                    rawtx += change_value
+
+                    rawtx += OpCodes.PUSH_25 + OpCodes.OP_DUP + OpCodes.OP_HASH160 + OpCodes.PUSH_20 + self.script_pubkey + OpCodes.OP_EQUALVERIFY + OpCodes.OP_CHECKSIG
+
+                    
+                    hex_length = format(int(len(tx_out.pub_key)/2), '02X')
+
+                    amount = bytes.fromhex(format(tx_out.value, '016x'))[::-1].hex()
+                    rawtx += str(amount) + hex_length + tx_out.pub_key
+
+                    return rawtx
+
 
             change = self.get_ins_total() - total_amount
             change_value = bytes.fromhex(format(change, '016x'))[::-1].hex()
@@ -323,6 +339,25 @@ class TxInterface:
 
         return tx
 
+    def get_opreturn_script(self, data):
+        OP_RETURN = "6a"
+        hex_length = format(int(len(data)/2), '02X')
+        return OP_RETURN + hex_length + data
+
+    def get_tx_opreturn( self, to_address, amount, data ):
+        address = self.wal.get_address()
+
+
+        from_scriptpubkey = self.wal.get_scriptpubkkey()
+
+        tx = Transaction(from_scriptpubkey)
+    
+        to_scriptpubkey = self.wal.base58DecodeIguana(to_address).hex()[2:-8]
+        tx.add_output( amount, to_scriptpubkey )
+        tx.add_output( 0, self.get_opreturn_script(data))
+
+        return tx
+
     def get_serialized_tx( self, tx ):
         ser_tx = tx.serialize()
         sig_key = self.wal.get_sign_key()
@@ -371,6 +406,30 @@ class TxInterface:
                 total_amount += n_value
         else:
             total_amount = amount
+
+        for utxo in utxos:
+            if utxo['amount'] >= total_amount:
+                tx.add_input( utxo['txid'], utxo['amount'], utxo['vout'], utxo['scriptPubKey'])
+                rawtx = self.get_serialized_tx(tx)
+
+                try:
+                    res = self.ex.broadcast_via_explorer( rawtx )
+                    if 'txid' in res:
+                        return res        
+                except:
+                    pass
+
+                time.sleep(1)
+
+    def send_tx_opreturn(self, to_address, data):
+        amount = 29185/1000000000
+        address = self.wal.get_address()
+        tx = self.get_tx_opreturn( to_address, amount, data )
+
+        utxos = self.ex.get_utxos( address )
+   
+        total_amount = 0
+        total_amount = amount
 
         for utxo in utxos:
             if utxo['amount'] >= total_amount:
