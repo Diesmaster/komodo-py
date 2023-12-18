@@ -147,6 +147,10 @@ class Transaction:
                     
                     hex_length = format(int(len(tx_out.pub_key)/2), '02X')
 
+                    if len(hex_length) > 2:
+                       hex_length =  bytes.fromhex(format(int(len(tx_out.pub_key)/2), '04X'))[::-1].hex()
+                       hex_length = "fd" + hex_length
+
                     amount = bytes.fromhex(format(tx_out.value, '016x'))[::-1].hex()
                     rawtx += str(amount) + hex_length + tx_out.pub_key
 
@@ -173,9 +177,28 @@ class Transaction:
 
 
             for tx_out in self.tx_outs:
-                amount = bytes.fromhex(format(tx_out.value, '016x'))[::-1].hex()
-                rawtx += str(amount) + OpCodes.PUSH_25 + OpCodes.OP_DUP + OpCodes.OP_HASH160 + OpCodes.PUSH_20 + tx_out.pub_key + OpCodes.OP_EQUALVERIFY + OpCodes.OP_CHECKSIG
-                total_amount += tx_out.value
+                if not tx_out.value == 0:
+                    amount = bytes.fromhex(format(tx_out.value, '016x'))[::-1].hex()
+                    rawtx += str(amount) +  OpCodes.PUSH_25 + OpCodes.OP_DUP + OpCodes.OP_HASH160 + OpCodes.PUSH_20 + tx_out.pub_key + OpCodes.OP_EQUALVERIFY  + OpCodes.OP_CHECKSIG
+                    total_amount += tx_out.value
+                else:
+                    change = self.get_ins_total() - total_amount
+                    change_value = bytes.fromhex(format(change, '016x'))[::-1].hex()
+                    rawtx += change_value
+
+                    rawtx += OpCodes.PUSH_25 + OpCodes.OP_DUP + OpCodes.OP_HASH160 + OpCodes.PUSH_20 + self.script_pubkey + OpCodes.OP_EQUALVERIFY + OpCodes.OP_CHECKSIG
+
+                    
+                    hex_length = format(int(len(tx_out.pub_key)/2), '02X')
+
+                    if len(hex_length) > 2:
+                       hex_length =  bytes.fromhex(format(int(len(tx_out.pub_key)/2), '04X'))[::-1].hex()
+                       hex_length = "fd" + hex_length
+
+                    amount = bytes.fromhex(format(tx_out.value, '016x'))[::-1].hex()
+                    rawtx += str(amount) + hex_length + tx_out.pub_key
+
+                    return rawtx
 
             change = self.get_ins_total() - total_amount
             change_value = bytes.fromhex(format(change, '016x'))[::-1].hex()
@@ -244,6 +267,10 @@ class Transaction:
         
         txins = self.serialize_inputs()
         txouts = self.serialize_outputs()
+        print("-----txouts-----")
+        #print(txouts)
+        txouts_barray = bytes.fromhex(txouts)
+        #print(txouts)
 
         if self.overwintered == True:
             hashJoinSplits = '00'*32
@@ -253,6 +280,7 @@ class Transaction:
             txins = self.serialize_input_sign()
             txouts = self.serialize_end_sign()
 
+            print(txouts)
 
             hashPrevouts = blake2b(bytes.fromhex(txins), digest_size=32, person=b'ZcashPrevoutHash').hexdigest()
             hashSequance = blake2b(bytes.fromhex(self.sequences), digest_size=32, person=b'ZcashSequencHash').hexdigest()
@@ -341,8 +369,14 @@ class TxInterface:
 
     def get_opreturn_script(self, data):
         OP_RETURN = "6a"
+        OP_PUSHDATA2 = "4d"
         hex_length = format(int(len(data)/2), '02X')
-        return OP_RETURN + hex_length + data
+        if len(hex_length) > 2:
+            hex_length =  bytes.fromhex(format(int(len(data)/2), '04X'))[::-1].hex()
+            #print(hex_length)
+            return OP_RETURN + OP_PUSHDATA2 + hex_length + data
+        else:
+            return OP_RETURN + hex_length + data
 
     def get_tx_opreturn( self, to_address, amount, data ):
         address = self.wal.get_address()

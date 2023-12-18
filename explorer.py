@@ -114,6 +114,8 @@ class Explorer:
         try:
             broadcast_res = requests.post(full_url, data=params)
             if len(broadcast_res.text) < 64: # TODO check if json, then if the json has a txid field and it is 64
+                print("error")
+                print(broadcast_res.text)
                 raise Exception(broadcast_res.text)
             else:
                 return json.loads(broadcast_res.text)
