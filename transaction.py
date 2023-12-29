@@ -137,6 +137,7 @@ class Transaction:
                     amount = bytes.fromhex(format(tx_out.value, '016x'))[::-1].hex()
                     rawtx += str(amount) +  OpCodes.PUSH_25 + OpCodes.OP_DUP + OpCodes.OP_HASH160 + OpCodes.PUSH_20 + tx_out.pub_key + OpCodes.OP_EQUALVERIFY  + OpCodes.OP_CHECKSIG
                     total_amount += tx_out.value
+
                 else:
                     change = self.get_ins_total() - total_amount
                     change_value = bytes.fromhex(format(change, '016x'))[::-1].hex()
@@ -159,7 +160,7 @@ class Transaction:
 
             change = self.get_ins_total() - total_amount
             change_value = bytes.fromhex(format(change, '016x'))[::-1].hex()
-            rawtx += change_value
+            rawtx += str(change_value)
 
             rawtx += OpCodes.PUSH_25 + OpCodes.OP_DUP + OpCodes.OP_HASH160 + OpCodes.PUSH_20 + self.script_pubkey + OpCodes.OP_EQUALVERIFY + OpCodes.OP_CHECKSIG
 
@@ -458,6 +459,7 @@ class TxInterface:
     def send_tx_opreturn(self, to_address, data):
         amount = 29185/1000000000
         address = self.wal.get_address()
+        print("data: " + data)
         tx = self.get_tx_opreturn( to_address, amount, data )
 
         utxos = self.ex.get_utxos( address )

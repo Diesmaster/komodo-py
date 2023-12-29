@@ -230,6 +230,9 @@ class WalletInterface:
 	def get_utxos( self ):
 		return self.ex.get_utxos(self.wal.get_address())
 
+	def get_balance( self ):
+		return self.ex.get_balance(self.wal.get_address())
+
 	def get_public_key( self ):
 		return self.wal.get_public_key()
 
