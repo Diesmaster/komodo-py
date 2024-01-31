@@ -6,13 +6,14 @@ import ecdsa
 
 import hashlib
 import math
+from Crypto.Hash import RIPEMD160
 from .transaction import TxInterface
 from .explorer import Explorer
 
 ## utils
 def r160( data ):
     sha256_hash = hashlib.sha256(data).digest()
-    ripemd160_hash = hashlib.new('ripemd160', sha256_hash).digest()
+    ripemd160_hash = RIPEMD160.new(sha256_hash).digest()
     return ripemd160_hash
 
 def s256( data ):

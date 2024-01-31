@@ -480,3 +480,5 @@ class TxInterface:
                     pass
 
                 time.sleep(1)
+
+        return None
