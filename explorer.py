@@ -95,7 +95,7 @@ class Explorer:
             raise Exception(e)
 
 
-    def broadcast_via_explorer( self, signedtx ):
+    def broadcast( self, signedtx ):
         #print("start broadcast_via_explorer")
 
         if type(self.url) is not str:
@@ -128,3 +128,27 @@ class Explorer:
             print("broadcast_via_explorer " + str(e))
             raise(e)
 
+class QueryInterface:
+    def __init__(self, url):
+        # Initialize an Explorer object with the given URL
+        self.query = Explorer(url)
+
+    def get_balance(self, addr):
+        # Proxy the call to Explorer's get_balance method
+        return self.query.get_balance(addr)
+
+    def get_utxos(self, addr):
+        # Proxy the call to Explorer's get_utxos method
+        return self.query.get_utxos(addr)
+
+    def get_transaction(self, txid):
+        # Proxy the call to Explorer's get_transaction method
+        return self.query.get_transaction(txid)
+
+    def get_network_status(self):
+        # Proxy the call to Explorer's get_network_status method
+        return self.query.get_network_status()
+
+    def broadcast(self, signedtx):
+        # Proxy the call to Explorer's broadcast_via_explorer method
+        return self.query.broadcast(signedtx)
