@@ -134,21 +134,32 @@ class QueryInterface:
         self.query = Explorer(url)
 
     def get_balance(self, addr):
-        # Proxy the call to Explorer's get_balance method
-        return self.query.get_balance(addr)
+        if hasattr(self.query, 'get_balance'):
+            return self.query.get_balance(addr)
+        else:
+            raise AttributeError("Explorer object has no method 'get_balance'")
 
     def get_utxos(self, addr):
-        # Proxy the call to Explorer's get_utxos method
-        return self.query.get_utxos(addr)
+        if hasattr(self.query, 'get_utxos'):
+            return self.query.get_utxos(addr)
+        else:
+            raise AttributeError("Explorer object has no method 'get_utxos'")
 
     def get_transaction(self, txid):
-        # Proxy the call to Explorer's get_transaction method
-        return self.query.get_transaction(txid)
+        if hasattr(self.query, 'get_transaction'):
+            return self.query.get_transaction(txid)
+        else:
+            raise AttributeError("Explorer object has no method 'get_transaction'")
 
     def get_network_status(self):
-        # Proxy the call to Explorer's get_network_status method
-        return self.query.get_network_status()
+        if hasattr(self.query, 'get_network_status'):
+            return self.query.get_network_status()
+        else:
+            raise AttributeError("Explorer object has no method 'get_network_status'")
 
     def broadcast(self, signedtx):
-        # Proxy the call to Explorer's broadcast_via_explorer method
-        return self.query.broadcast(signedtx)
+        if hasattr(self.query, 'broadcast_via_explorer'):
+            return self.query.broadcast_via_explorer(signedtx)
+        else:
+            raise AttributeError("Explorer object has no method 'broadcast_via_explorer'")
+

@@ -344,8 +344,8 @@ def find_utxo( utxos, amount ):
 
 
 class TxInterface:
-    def __init__(self, ex, wal):
-        self.ex = ex 
+    def __init__(self, query, wal):
+        self.query = query 
         self.wal = wal
 
     def get_tx( self, to_address, amount ):
@@ -410,7 +410,7 @@ class TxInterface:
         address = self.wal.get_address()
         tx = self.get_tx( to_address, amount )
 
-        utxos = self.ex.get_utxos( address )
+        utxos = self.query.get_utxos( address )
         utxo = find_utxo( utxos, 1 )
 
 
@@ -423,7 +423,7 @@ class TxInterface:
             return "needs to be the same type"
 
         rawtx = self.make_address_transaction( to_address, amount )
-        res = self.ex.broadcast_via_explorer( rawtx )
+        res = self.query.broadcast_via_explorer( rawtx )
         return res
 
     def send_tx_force( self, to_address, amount ):
@@ -433,7 +433,7 @@ class TxInterface:
         address = self.wal.get_address()
         tx = self.get_tx( to_address, amount )
 
-        utxos = self.ex.get_utxos( address )
+        utxos = self.query.get_utxos( address )
    
         total_amount = 0
         if isinstance(to_address, list):
@@ -448,7 +448,7 @@ class TxInterface:
                 rawtx = self.get_serialized_tx(tx)
 
                 try:
-                    res = self.ex.broadcast_via_explorer( rawtx )
+                    res = self.query.broadcas( rawtx )
                     if 'txid' in res:
                         return res        
                 except:
@@ -462,7 +462,7 @@ class TxInterface:
         print("data: " + data)
         tx = self.get_tx_opreturn( to_address, amount, data )
 
-        utxos = self.ex.get_utxos( address )
+        utxos = self.query.get_utxos( address )
    
         total_amount = 0
         total_amount = amount
@@ -473,7 +473,7 @@ class TxInterface:
                 rawtx = self.get_serialized_tx(tx)
 
                 try:
-                    res = self.ex.broadcast_via_explorer( rawtx )
+                    res = self.query.broadcast( rawtx )
                     if 'txid' in res:
                         return res        
                 except:
