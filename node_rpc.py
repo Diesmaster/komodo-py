@@ -18,14 +18,6 @@ class NodeRpc:
         except Exception as e:
             raise Exception(f"Error importing private key: {e}")
 
-
-    def import_priv_key(self, priv_key):
-        try:
-            self.rpc_connection.importprivkey(priv_key)
-        except Exception as e:
-            raise Exception(f"Error importing private key: {e}")
-
-
     def get_balance(self, addr):
         try:
             balance = self.rpc_connection.getbalance()
