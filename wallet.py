@@ -242,26 +242,26 @@ class WalletInterface:
 		res = tx_in.send_tx_opreturn( to_address, data )
 		return res
 
-	 def oracles_create(self, name, description, data_type):
-        return self.query.oracles_create(name, description, data_type)
+	def oracles_create(self, name, description, data_type):
+		return self.query.oracles_create(name, description, data_type)
 
-    def oracles_fund(self, oracle_id):
-        return self.query.oracles_fund(oracle_id)
+	def oracles_fund(self, oracle_id):
+		return self.query.oracles_fund(oracle_id)
 
-    def oracles_register(self, oracle_id, data_fee):
-        return self.query.oracles_register(oracle_id, data_fee)
+	def oracles_register(self, oracle_id, data_fee):
+		return self.query.oracles_register(oracle_id, data_fee)
 
-    def oracles_subscribe(self, oracle_id, publisher_id, data_fee):
-        return self.query.oracles_subscribe(oracle_id, publisher_id, data_fee)
+	def oracles_subscribe(self, oracle_id, publisher_id, data_fee):
+		return self.query.oracles_subscribe(oracle_id, publisher_id, data_fee)
 
-    def oracles_info(self, oracle_id):
-        return self.query.oracles_info(oracle_id)
+	def oracles_info(self, oracle_id):
+		return self.query.oracles_info(oracle_id)
 
-    def oracles_data(self, oracle_id, hex_string):
-        return self.query.oracles_data(oracle_id, hex_string)
+	def oracles_data(self, oracle_id, hex_string):
+		return self.query.oracles_data(oracle_id, hex_string)
 
-    def oracles_list(self):
-        return self.query.oracles_list()
+	def oracles_list(self):
+		return self.query.oracles_list()
 
-    def oracles_samples(self, oracletxid, batonutxo, num):
-        return self.query.oracles_samples(oracletxid, batonutxo, num)
+	def oracles_samples(self, oracletxid, batonutxo, num):
+		return self.query.oracles_samples(oracletxid, batonutxo, num)
