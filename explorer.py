@@ -158,8 +158,8 @@ class QueryInterface:
             raise AttributeError("Explorer object has no method 'get_network_status'")
 
     def broadcast(self, signedtx):
-        if hasattr(self.query, 'broadcast_via_explorer'):
-            return self.query.broadcast_via_explorer(signedtx)
+        if hasattr(self.query, 'broadcast'):
+            return self.query.broadcast(signedtx)
         else:
             raise AttributeError("Explorer object has no method 'broadcast_via_explorer'")
 
