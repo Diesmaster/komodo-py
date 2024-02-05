@@ -8,7 +8,7 @@ import hashlib
 import math
 from Crypto.Hash import RIPEMD160
 from .transaction import TxInterface
-from .explorer import Explorer
+from .explorer import QueryInterface
 
 ## utils
 def r160( data ):
@@ -203,8 +203,8 @@ class Wallet:
 
 
 class WalletInterface:
-	def __init__(self, query, seed):
-		self.query = query
+	def __init__(self, backend, seed):
+		self.query = QueryInterface(backend)
 		self.wal = Wallet(seed)
 
 	def get_address( self ):
