@@ -59,3 +59,60 @@ class NodeRpc:
         except Exception as e:
             raise Exception(f"Error getting node info: {e}")
         return info
+
+    ### oracle functions
+    def oracles_create(self, name, description, data_type):
+        try:
+            oracles_hex = self.rpc_connection.oraclescreate(name, description, data_type)
+        except Exception as e:
+            raise Exception(f"Error in oracles_create: {e}")
+        return oracles_hex
+
+    def oracles_fund(self, oracle_id):
+        try:
+            oracles_fund_hex = self.rpc_connection.oraclesfund(oracle_id)
+        except Exception as e:
+            raise Exception(f"Error in oracles_fund: {e}")
+        return oracles_fund_hex
+
+    def oracles_register(self, oracle_id, data_fee):
+        try:
+            oracles_register_hex = self.rpc_connection.oraclesregister(oracle_id, data_fee)
+        except Exception as e:
+            raise Exception(f"Error in oracles_register: {e}")
+        return oracles_register_hex
+
+    def oracles_subscribe(self, oracle_id, publisher_id, data_fee):
+        try:
+            oracles_subscribe_hex = self.rpc_connection.oraclessubscribe(oracle_id, publisher_id, data_fee)
+        except Exception as e:
+            raise Exception(f"Error in oracles_subscribe: {e}")
+        return oracles_subscribe_hex
+
+    def oracles_info(self, oracle_id):
+        try:
+            oracles_info = self.rpc_connection.oraclesinfo(oracle_id)
+        except Exception as e:
+            raise Exception(f"Error in oracles_info: {e}")
+        return oracles_info
+
+    def oracles_data(self, oracle_id, hex_string):
+        try:
+            oracles_data = self.rpc_connection.oraclesdata(oracle_id, hex_string)
+        except Exception as e:
+            raise Exception(f"Error in oracles_data: {e}")
+        return oracles_data
+
+    def oracles_list(self):
+        try:
+            oracles_list = self.rpc_connection.oracleslist()
+        except Exception as e:
+            raise Exception(f"Error in oracles_list: {e}")
+        return oracles_list
+
+    def oracles_samples(self, oracletxid, batonutxo, num):
+        try:
+            oracles_sample = self.rpc_connection.oraclessamples(oracletxid, batonutxo, num)
+        except Exception as e:
+            raise Exception(f"Error in oracles_samples: {e}")
+        return oracles_sample

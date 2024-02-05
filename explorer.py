@@ -129,9 +129,9 @@ class Explorer:
             raise(e)
 
 class QueryInterface:
-    def __init__(self, url):
+    def __init__(self, backend):
         # Initialize an Explorer object with the given URL
-        self.query = Explorer(url)
+        self.query = backend
 
     def get_balance(self, addr):
         if hasattr(self.query, 'get_balance'):
@@ -163,3 +163,50 @@ class QueryInterface:
         else:
             raise AttributeError("Explorer object has no method 'broadcast_via_explorer'")
 
+    def oracles_create(self, name, description, data_type):
+        if hasattr(self.query, 'oracles_create'):
+            return self.query.oracles_create(name, description, data_type)
+        else:
+            raise AttributeError("NodeRpc object has no method 'oracles_create'")
+
+    def oracles_fund(self, oracle_id):
+        if hasattr(self.query, 'oracles_fund'):
+            return self.query.oracles_fund(oracle_id)
+        else:
+            raise AttributeError("NodeRpc object has no method 'oracles_fund'")
+
+    def oracles_register(self, oracle_id, data_fee):
+        if hasattr(self.query, 'oracles_register'):
+            return self.query.oracles_register(oracle_id, data_fee)
+        else:
+            raise AttributeError("NodeRpc object has no method 'oracles_register'")
+
+    def oracles_subscribe(self, oracle_id, publisher_id, data_fee):
+        if hasattr(self.query, 'oracles_subscribe'):
+            return self.query.oracles_subscribe(oracle_id, publisher_id, data_fee)
+        else:
+            raise AttributeError("NodeRpc object has no method 'oracles_subscribe'")
+
+    def oracles_info(self, oracle_id):
+        if hasattr(self.query, 'oracles_info'):
+            return self.query.oracles_info(oracle_id)
+        else:
+            raise AttributeError("NodeRpc object has no method 'oracles_info'")
+
+    def oracles_data(self, oracle_id, hex_string):
+        if hasattr(self.query, 'oracles_data'):
+            return self.query.oracles_data(oracle_id, hex_string)
+        else:
+            raise AttributeError("NodeRpc object has no method 'oracles_data'")
+
+    def oracles_list(self):
+        if hasattr(self.query, 'oracles_list'):
+            return self.query.oracles_list()
+        else:
+            raise AttributeError("NodeRpc object has no method 'oracles_list'")
+
+    def oracles_samples(self, oracletxid, batonutxo, num):
+        if hasattr(self.query, 'oracles_samples'):
+            return self.query.oracles_samples(oracletxid, batonutxo, num)
+        else:
+            raise AttributeError("NodeRpc object has no method 'oracles_samples'")
