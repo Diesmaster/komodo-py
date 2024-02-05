@@ -203,25 +203,25 @@ class Wallet:
 
 
 class WalletInterface:
-	def __init__(self, ex_url, seed):
-		self.ex = Explorer(ex_url)
+	def __init__(self, query, seed):
+		self.query = query
 		self.wal = Wallet(seed)
 
 	def get_address( self ):
 		return self.wal.get_address()
 
 	def make_address_transaction( self, to_address, amount ):
-		tx_in = TxInterface(self.ex, self.wal)
+		tx_in = TxInterface(self.query, self.wal)
 		res = tx_in.make_address_transaction( to_address, amount )
 		return res
 
 	def send_tx( self, to_address, amount ):
-		tx_in = TxInterface(self.ex, self.wal)
+		tx_in = TxInterface(self.query, self.wal)
 		res = tx_in.send_tx( to_address, amount )
 		return res
 
 	def send_tx_force( self, to_address, amount ):
-		tx_in = TxInterface(self.ex, self.wal)
+		tx_in = TxInterface(self.query, self.wal)
 		res = tx_in.send_tx_force( to_address, amount )
 		return res
 
@@ -229,15 +229,39 @@ class WalletInterface:
  		return self.wal.get_sign_key()
 	
 	def get_utxos( self ):
-		return self.ex.get_utxos(self.wal.get_address())
+		return self.query.get_utxos(self.wal.get_address())
 
 	def get_balance( self ):
-		return self.ex.get_balance(self.wal.get_address())
+		return self.query.get_balance(self.wal.get_address())
 
 	def get_public_key( self ):
 		return self.wal.get_public_key()
 
 	def send_tx_opreturn( self, to_address, data ):
-		tx_in = TxInterface(self.ex, self.wal)
+		tx_in = TxInterface(self.query, self.wal)
 		res = tx_in.send_tx_opreturn( to_address, data )
 		return res
+
+	 def oracles_create(self, name, description, data_type):
+        return self.query.oracles_create(name, description, data_type)
+
+    def oracles_fund(self, oracle_id):
+        return self.query.oracles_fund(oracle_id)
+
+    def oracles_register(self, oracle_id, data_fee):
+        return self.query.oracles_register(oracle_id, data_fee)
+
+    def oracles_subscribe(self, oracle_id, publisher_id, data_fee):
+        return self.query.oracles_subscribe(oracle_id, publisher_id, data_fee)
+
+    def oracles_info(self, oracle_id):
+        return self.query.oracles_info(oracle_id)
+
+    def oracles_data(self, oracle_id, hex_string):
+        return self.query.oracles_data(oracle_id, hex_string)
+
+    def oracles_list(self):
+        return self.query.oracles_list()
+
+    def oracles_samples(self, oracletxid, batonutxo, num):
+        return self.query.oracles_samples(oracletxid, batonutxo, num)
