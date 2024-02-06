@@ -95,20 +95,29 @@ class Oracles:
 
         return res
 
-    def fund_oracle_total(self, oracle_txid):
-        res = self.query.oracles_fund(oracle_txid)
+    def subscribe_oracle_total(self, oracle_txid, data_fee):
+        res = self.get_oracle_info(oracle_txid)
+
+        publisherid = res['registered'][0]['publisher']
+
+        res = self.subscribe_to_oracle(oracle_txid, publisherid, data_fee)
         # Check if the creation was successful
         if not res.get('result') == 'success':
             error_message = res.get('error', 'Unknown error')
             print(f"Oracle fund failed: {error_message}")
             raise Exception(f"Oracle fund failed: {error_message}")
 
-        fund_txid = self.query.broadcast(res['hex'])
+        print(res)
 
-        return fund_txid
+        sub_txid = self.query.broadcast(res['hex'])
+
+        return sub_txid
 
     def create_string_oracle(self, name, description, data_fee):
         # Call the oracle_create method from the wallet object
+
+        print(data_fee)
+
         res = self.query.oracles_create(name, description, "s")
         
         oracle_txid = self.query.broadcast(res['hex'])

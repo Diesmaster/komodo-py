@@ -60,6 +60,13 @@ class NodeRpc:
             raise Exception(f"Error getting node info: {e}")
         return info
 
+    def get_rawtransaction(self, txid):
+        try:
+            tx = self.rpc_connection.getrawtransaction(txid)
+        except Exception as e:
+            raise Exception(f"Error getting tx: {e}")
+        return tx
+
     ### oracle functions
     def oracles_create(self, name, description, data_type):
         try:

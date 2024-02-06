@@ -111,8 +111,9 @@ class Explorer:
         #print("PARAMS: " + str(params))
         #print("Broadcast via " + full_url)
 
+        broadcast_res = {}
         try:
-            broadcast_res = requests.post(full_url, data=params)
+            broadcast_res = requests.post(full_url, data=params, verify=False)
             if len(broadcast_res.text) < 64: # TODO check if json, then if the json has a txid field and it is 64
                 print("error")
                 print(broadcast_res.text)
@@ -121,7 +122,7 @@ class Explorer:
                 return json.loads(broadcast_res.text)
 
         except Exception as e:
-            print(str(broadcast_res.__dict__))
+            print(str(broadcast_res))
             # log2discord(f"---\nThere is an exception during the broadcast: **{params}**\n Error: **{e}**\n---")
             print("rawtx: " + str(signedtx))
             # log2discord(rawtx_text)

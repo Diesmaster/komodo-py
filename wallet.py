@@ -250,7 +250,7 @@ class WalletInterface:
 		res = tx_in.send_tx_opreturn( to_address, data )
 		return res
 
-	def publish_data_string_to_oracle( self, name, discription, data_fee="0.1" ):
+	def create_string_oracle( self, name, description, data_fee="0.1" ):
 		if self.oracles == None:
 			return "oracles are none"
 
@@ -262,9 +262,11 @@ class WalletInterface:
 
 		return self.oracles.publish_data_string_to_oracle(oracle_txid, string)
 
-	def fund_oracle( self, oracle_txid ):
-		return self.oracles.fund_oracle_total(oracle_txid)
+	def subscribe_to_oracle( self, oracle_txid, data_fee="0.1" ):
+		return self.oracles.subscribe_oracle_total(oracle_txid, data_fee)
 
+	def get_oracle_info( self, oracle_txid):
+		return self.oracles.get_oracle_info(oracle_txid)
 
 	##debug functions
 	def get_wif(self):
