@@ -106,6 +106,7 @@ class NodeRpc:
     def oracles_data(self, oracle_id, hex_string):
         try:
             oracles_data = self.rpc_connection.oraclesdata(oracle_id, hex_string)
+            print(oracles_data)
         except Exception as e:
             raise Exception(f"Error in oracles_data: {e}")
         return oracles_data

@@ -4,6 +4,7 @@ class Oracles:
     def __init__(self, query):
         self.query = query
         self.addresses = {}
+        self.number_of_samples = "100000"
 
     def check_balance(self, address):
 
@@ -13,8 +14,17 @@ class Oracles:
         else:
             return f"Balance is enough: {balance}"
 
+    def list_oracles(self):
+        return self.query.oracles_list()
+
     def create_oracle(self, name, description, data_type):
         return self.query.oracle_create(name, description, data_type)
+
+    def samples_oracle(self, oracle_txid):
+        res = self.get_oracle_info(oracle_txid)
+        batton_addr = res['registered'][0]['baton']
+        res = self.query.oracles_samples(oracle_txid, batton_addr, self.number_of_samples)
+        return res
 
     def send_oracle_creation_tx(self, hex_value):
         res = self.query.sendrawtxwrapper(hex_value)
@@ -82,9 +92,16 @@ class Oracles:
             res = self.query.oracles_data(oracle_txid, final_hex_data)
             x += 1
 
-        return res
+        pub_txid = self.query.broadcast(res['hex'])
+
+        return pub_txid
 
     def get_oracle_info(self, oracle_txid, retry_interval=30):
+        res = self.query.oracles_info(oracle_txid)
+
+        return res
+
+    def get_oracle_info_while(self, oracle_txid, retry_interval=30):
         res = self.query.oracles_info(oracle_txid)
 
         # Keep checking until at least one publisher is registered
@@ -96,20 +113,24 @@ class Oracles:
         return res
 
     def subscribe_oracle_total(self, oracle_txid, data_fee):
-        res = self.get_oracle_info(oracle_txid)
+        res = self.get_oracle_info_while(oracle_txid)
 
         publisherid = res['registered'][0]['publisher']
 
-        res = self.subscribe_to_oracle(oracle_txid, publisherid, data_fee)
-        # Check if the creation was successful
-        if not res.get('result') == 'success':
-            error_message = res.get('error', 'Unknown error')
-            print(f"Oracle fund failed: {error_message}")
-            raise Exception(f"Oracle fund failed: {error_message}")
+        res = {}
 
-        print(res)
+        while not res.get('result'):
+            res = self.subscribe_to_oracle(oracle_txid, publisherid, data_fee)
+            # Check if the creation was successful
+            print(res)
+            if not res.get('result') == 'success':
+                error_message = res.get('error', 'Unknown error')
+                print(f"Oracle fund failed: {error_message}")
+                raise Exception(f"Oracle fund failed: {error_message}")
 
         sub_txid = self.query.broadcast(res['hex'])
+
+        print(sub_txid)
 
         return sub_txid
 
@@ -130,10 +151,13 @@ class Oracles:
 
         register_txid = self.query.broadcast(res['hex'])
 
-        res = self.get_oracle_info(oracle_txid)
+        for i in range(0,10):
+            try:
+                res = self.subscribe_oracle_total(oracle_txid, data_fee)
+                print(res)
+            except BaseException as e:
+                print(e)
 
-        publisherid = res['registered'][0]['publisher']
-
-        res = self.subscribe_to_oracle(oracle_txid, publisherid, data_fee)
+            time.sleep(5)
 
         return oracle_txid
