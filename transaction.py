@@ -474,8 +474,10 @@ class TxInterface:
 
                 try:
                     res = self.query.broadcast( rawtx )
-                    if 'txid' in res:
-                        return res        
+                    if ('txid' in res) or len(res) == len("6424cae0c8eff6bb8631cbca245e189d6c2dc0b78c7833585600dcd2382aa84a") :
+                        return res
+                    else:
+                        print(res)        
                 except:
                     pass
 

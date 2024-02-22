@@ -141,6 +141,8 @@ class Oracles:
 
         res = self.query.oracles_create(name, description, "s")
         
+        print(res)
+
         oracle_txid = self.query.broadcast(res['hex'])
 
         res = self.fund_oracle(oracle_txid)
