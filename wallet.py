@@ -245,9 +245,9 @@ class WalletInterface:
 	def get_public_key( self ):
 		return self.wal.get_public_key()
 
-	def send_tx_opreturn( self, to_address, data ):
+	def send_tx_opreturn( self, to_address, data, marker=29185 ):
 		tx_in = TxInterface(self.query, self.wal)
-		res = tx_in.send_tx_opreturn( to_address, data )
+		res = tx_in.send_tx_opreturn( to_address, data, marker )
 		return res
 
 	def create_string_oracle( self, name, description, data_fee="1000000" ):

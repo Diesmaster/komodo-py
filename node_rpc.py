@@ -39,6 +39,20 @@ class NodeRpc:
             raise Exception(f"Error getting transaction: {e}")
         return transaction
 
+    def get_block(self, hash_or_height, verbose=True):
+        try:
+            block_info = self.rpc_connection.getblock(hash_or_height, verbose)
+        except Exception as e:
+            raise Exception(f"Error getting block: {e}")
+        return block_info
+
+    def get_blockcount(self):
+        try:
+            block_info = self.rpc_connection.getblockcount()
+        except Exception as e:
+            raise Exception(f"Error getting block: {e}")
+        return block_info
+
     def get_network_status(self):
         try:
             info = self.rpc_connection.getinfo()
@@ -106,7 +120,6 @@ class NodeRpc:
     def oracles_data(self, oracle_id, hex_string):
         try:
             oracles_data = self.rpc_connection.oraclesdata(oracle_id, hex_string)
-            print(oracles_data)
         except Exception as e:
             raise Exception(f"Error in oracles_data: {e}")
         return oracles_data

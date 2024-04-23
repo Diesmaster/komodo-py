@@ -456,7 +456,8 @@ class TxInterface:
 
                 time.sleep(1)
 
- def send_tx_opreturn(self, to_address, data, marker=29185):
+
+    def send_tx_opreturn(self, to_address, data, marker=29185):
         amount = marker/100000000
         address = self.wal.get_address()
         print("data: " + data)
