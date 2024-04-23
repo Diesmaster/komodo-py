@@ -456,10 +456,13 @@ class TxInterface:
 
                 time.sleep(1)
 
-    def send_tx_opreturn(self, to_address, data):
-        amount = 29185/1000000000
+    def send_tx_opreturn(self, to_address, data, marker=29185):
+        amount = marker/100000000
         address = self.wal.get_address()
         print("data: " + data)
+
+        print("amount: " + str(amount))
+
         tx = self.get_tx_opreturn( to_address, amount, data )
 
         utxos = self.query.get_utxos( address )

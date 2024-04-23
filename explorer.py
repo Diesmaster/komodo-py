@@ -140,6 +140,12 @@ class QueryInterface:
         else:
             raise AttributeError("Explorer object has no method 'get_balance'")
 
+    def get_blockcount(self):
+        if hasattr(self.query, 'get_balance'):
+            return self.query.get_blockcount()
+        else:
+            raise AttributeError("Explorer object has no method 'get_balance'")
+
     def get_utxos(self, addr):
         if hasattr(self.query, 'get_utxos'):
             return self.query.get_utxos(addr)
@@ -151,6 +157,12 @@ class QueryInterface:
             return self.query.get_transaction(txid)
         else:
             raise AttributeError("Explorer object has no method 'get_transaction'")
+
+    def get_block(self, hash_or_height, verbose=True):
+        if hasattr(self.query, 'get_block'):
+            return self.query.get_block(hash_or_height, verbose)
+        else:
+            raise AttributeError("Explorer object has no method 'get_block'")
 
     def get_network_status(self):
         if hasattr(self.query, 'get_network_status'):
