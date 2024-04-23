@@ -448,7 +448,7 @@ class TxInterface:
                 rawtx = self.get_serialized_tx(tx)
 
                 try:
-                    res = self.query.broadcas( rawtx )
+                    res = self.query.broadcast( rawtx )
                     if 'txid' in res:
                         return res        
                 except:
