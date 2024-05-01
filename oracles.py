@@ -1,5 +1,8 @@
 import time
 
+##TODO: make it into a real object -> obj oracle represents 1 oracle
+
+
 class Oracles:
     def __init__(self, query):
         self.query = query
@@ -104,7 +107,7 @@ class Oracles:
             length_hex = length_hex +"00"
 
         if len(length_hex) < 4:
-            length_hex = length_hex[1] + length_hex[0] + "0"+length_hex[2]
+            length_hex = length_hex[1] + length_hex[2] + "0"+length_hex[0]
 
 
 
