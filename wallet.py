@@ -262,7 +262,7 @@ class WalletInterface:
 
 		return self.oracles.publish_data_string_to_oracle(oracle_txid, string)
 
-	def subscribe_to_oracle( self, oracle_txid, data_fee="0.1" ):
+	def subscribe_to_oracle( self, oracle_txid, data_fee="1" ):
 		return self.oracles.subscribe_oracle_total(oracle_txid, data_fee)
 
 	def get_oracle_info( self, oracle_txid):
@@ -272,6 +272,9 @@ class WalletInterface:
 		return self.oracles.list_oracles()
 
 	def get_oracle_data( self, oracle_txid):
+		return self.oracles.samples_oracle(oracle_txid)
+
+	def get_oracle_last_data( self, oracle_txid):
 		return self.oracles.samples_oracle(oracle_txid)
 
 	##debug functions

@@ -26,6 +26,13 @@ class Oracles:
         res = self.query.oracles_samples(oracle_txid, batton_addr, self.number_of_samples)
         return res
 
+    def get_oracle_last_data(self, oracle_txid):
+        res = self.get_oracle_info(oracle_txid)
+        batton_addr = res['registered'][0]['baton']
+        res = self.query.oracles_samples(oracle_txid, batton_addr, 1)
+        return res
+
+
     def send_oracle_creation_tx(self, hex_value):
         res = self.query.sendrawtxwrapper(hex_value)
         if not res.get('result') == 'success':
@@ -47,7 +54,14 @@ class Oracles:
         return res
 
     def register_as_publisher(self, oracle_txid, data_fee):
+
+        print("register")
+        print(oracle_txid)
+        print(data_fee)
+
         res = self.query.oracles_register(oracle_txid, data_fee)
+
+        print(res)
 
         if not res.get('result') == 'success':
             error_message = res.get('error', 'Unknown error')
@@ -66,6 +80,9 @@ class Oracles:
         return res
 
     def publish_data_string_to_oracle(self, oracle_txid, data_string, max_retry=3, retry_interval=30):
+
+        print(data_string)
+
         # Convert the string to UTF-8 bytes and then to a hex string
         hex_data = data_string.encode('utf-8').hex()
 
@@ -75,8 +92,25 @@ class Oracles:
         # Convert the length to a hex string
         length_hex = format(data_length, 'x')
 
+        print(length_hex)
+
+        if length_hex == 4:
+            length_hex[1] + length_hex[0] + length_hex[3] + length_hex[2]
+
         if len(length_hex) < 2:
-            length_hex = "0"+length_hex 
+            length_hex = "0"+length_hex+"00" 
+
+        if len(length_hex) < 3:
+            length_hex = length_hex +"00"
+
+        if len(length_hex) < 4:
+            length_hex = length_hex[1] + length_hex[0] + "0"+length_hex[2]
+
+
+
+
+        print(hex_data)
+        print(length_hex)
 
         # Concatenate the length in hex and the data hex string
         final_hex_data = length_hex + hex_data
@@ -87,12 +121,18 @@ class Oracles:
         x = 0
 
         while res.get('result') == 'error' and x < max_retry:
-            print("Error encountered. Trying again..." + str(res))
+            print("Error encountered. Trying again... " + str(res))
+            ret = self.subscribe_oracle_total(oracle_txid, "1")
+            print(ret)
             time.sleep(retry_interval)
             res = self.query.oracles_data(oracle_txid, final_hex_data)
             x += 1
 
+        print(res)
+
         pub_txid = self.query.broadcast(res['hex'])
+
+        self.subscribe_oracle_total(oracle_txid, "1")
 
         return pub_txid
 
@@ -139,15 +179,24 @@ class Oracles:
 
         print(data_fee)
 
-        res = self.query.oracles_create(name, description, "s")
+        res = self.query.oracles_create(name, description, "S")
         
         print(res)
 
         oracle_txid = self.query.broadcast(res['hex'])
 
+        print("oracle_txid")
+        print(oracle_txid)
+
         res = self.fund_oracle(oracle_txid)
 
+        print("fund res")
+        print(res)
+
         fund_txid = self.query.broadcast(res['hex'])
+
+        #print("fund tx id")
+        #print(fund_txid)
 
         res = self.register_as_publisher(oracle_txid, data_fee)
 
