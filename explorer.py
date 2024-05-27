@@ -96,7 +96,7 @@ class Explorer:
 
 
     def broadcast( self, signedtx ):
-        #print("start broadcast_via_explorer")
+        print("start broadcast_via_explorer")
 
         if type(self.url) is not str:
             print("Explorer URL must be string")
@@ -114,6 +114,10 @@ class Explorer:
         broadcast_res = {}
         try:
             broadcast_res = requests.post(full_url, data=params, verify=False)
+
+            print("BC RES:")
+            print(broadcast_res)
+
             if len(broadcast_res.text) < 64: # TODO check if json, then if the json has a txid field and it is 64
                 print("error")
                 print(broadcast_res.text)

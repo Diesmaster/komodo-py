@@ -18,8 +18,10 @@ class OpCodes:
     PUSH_25 = "19"
     PUSH_20 = "14"
     PUSH_33 = "21" #(size of compressed key)
+    PUSH_70 = "46"
     PUSH_71 = "47"
     PUSH_72 = "48"
+    PUSH_73 = "49"
 
 
 # Class for Transaction Inputs
@@ -98,6 +100,18 @@ class Transaction:
                 sig = OpCodes.OP_TOALTSTACK + OpCodes.PUSH_72 + self.tx_ins[0].signature
             pub = n_inputs + OpCodes.PUSH_33 + self.tx_ins[0].pub_key    
 
+        if len(self.tx_ins[0].script_pubkey) == len("2103bbdb8b2e5f70affe34b275899acdec3c1569b6898503fa21b40b0d537e9a2b65ac"):
+            print("script pub key: " +  str(self.tx_ins[0].script_pubkey))
+            print("no pubkey")
+            print(len(self.tx_ins[0].signature))
+            print(self.tx_ins[0].signature)
+            if len(self.tx_ins[0].signature) == 140:
+                sig = OpCodes.PUSH_72 + OpCodes.PUSH_71 + self.tx_ins[0].signature
+            else:
+                sig = OpCodes.PUSH_73 + OpCodes.PUSH_72 + self.tx_ins[0].signature
+            #sig = sig[:2]
+            pub = n_inputs
+
         #start raw tx
         rawtx= self.version + self.version_group_id # tx version
         #rawtx= rawtx +  #version group id
@@ -140,6 +154,7 @@ class Transaction:
 
                 else:
                     change = self.get_ins_total() - total_amount
+                    print("change: " + str(change))
                     change_value = bytes.fromhex(format(change, '016x'))[::-1].hex()
                     rawtx += change_value
 
@@ -148,8 +163,13 @@ class Transaction:
                     
                     hex_length = format(int(len(tx_out.pub_key)/2), '02X')
 
+                    print("Lenght: " + str(hex_length))
+
                     if len(hex_length) > 2:
                        hex_length =  bytes.fromhex(format(int(len(tx_out.pub_key)/2), '04X'))[::-1].hex()
+
+                       print("Lenght: " + str(hex_length))
+
                        hex_length = "fd" + hex_length
 
                     amount = bytes.fromhex(format(tx_out.value, '016x'))[::-1].hex()
@@ -387,6 +407,8 @@ class TxInterface:
 
         tx = Transaction(from_scriptpubkey)
     
+        print("amount: " + str(amount))
+
         to_scriptpubkey = self.wal.base58DecodeIguana(to_address).hex()[2:-8]
         tx.add_output( amount, to_scriptpubkey )
         tx.add_output( 0, self.get_opreturn_script(data))
@@ -444,6 +466,9 @@ class TxInterface:
 
         for utxo in utxos:
             if utxo['amount'] >= total_amount:
+
+                print("we get here")
+
                 tx.add_input( utxo['txid'], utxo['amount'], utxo['vout'], utxo['scriptPubKey'])
                 rawtx = self.get_serialized_tx(tx)
 
@@ -452,6 +477,7 @@ class TxInterface:
                     if 'txid' in res:
                         return res        
                 except:
+                    print(res)
                     pass
 
                 time.sleep(1)
@@ -472,12 +498,21 @@ class TxInterface:
         total_amount = amount
 
         for utxo in utxos:
-            if utxo['amount'] >= total_amount:
+
+            print("utxo:")
+            print(str(utxo))
+
+            if utxo['amount'] >= total_amount+1:
                 tx.add_input( utxo['txid'], utxo['amount'], utxo['vout'], utxo['scriptPubKey'])
                 rawtx = self.get_serialized_tx(tx)
 
+                print("try")
+
                 try:
                     res = self.query.broadcast( rawtx )
+
+                    print(res)
+                                                          #be96e7b42e4cd3a0c566c03a634a837fd77d5b930fa71f6dd72a0636e6418de9
                     if ('txid' in res) or len(res) == len("6424cae0c8eff6bb8631cbca245e189d6c2dc0b78c7833585600dcd2382aa84a") :
                         return res
                     else:

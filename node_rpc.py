@@ -29,9 +29,21 @@ class NodeRpc:
     def get_utxos(self, addr):
         try:
             utxos = self.rpc_connection.listunspent(1, 9999999, [addr])
+
+            # for utxo in utxos:
+            #    utxo['vout'] = utxo['vout'] 
+
         except Exception as e:
             raise Exception(f"Error getting UTXOs: {e}")
         return utxos
+
+    def get_mempool(self, addr):
+        try:
+            utxos = self.rpc_connection.getaddressmempool({"addresses": [addr]})
+        except Exception as e:
+            raise Exception(f"Error getting UTXOs: {e}")
+        return utxos
+
 
     def get_transaction(self, txid):
         try:
@@ -63,8 +75,15 @@ class NodeRpc:
 
     def broadcast(self, signedtx):
         try:
+            print("broadast node")
+
             tx_id = self.rpc_connection.sendrawtransaction(signedtx)
+
+            print("res: " + str(tx_id))
+
         except Exception as e:
+            print(str(e))
+            print(signedtx)
             raise Exception(f"Error broadcasting transaction: {e}")
         return tx_id
 
