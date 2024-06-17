@@ -497,6 +497,8 @@ class TxInterface:
         total_amount = 0
         total_amount = amount
 
+        count = 0
+
         for utxo in utxos:
 
             print("utxo:")
@@ -517,7 +519,12 @@ class TxInterface:
                         return res
                     else:
                         print(res)        
-                except:
-                    pass
+                except Exception as e:
+                print(f"Exception during broadcast: {e}")
+                if count < 20:
+                    count += 1
+                    continue
+                else:
+                    raise Exception(f"Failed to broadcast transaction after multiple attempts: {e}")
 
         return None
