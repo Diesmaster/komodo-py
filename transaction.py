@@ -520,11 +520,11 @@ class TxInterface:
                     else:
                         print(res)        
                 except Exception as e:
-                print(f"Exception during broadcast: {e}")
-                if count < 20:
-                    count += 1
-                    continue
-                else:
-                    raise Exception(f"Failed to broadcast transaction after multiple attempts: {e}")
+                    print(f"Exception during broadcast: {e}")
+                    if count < 20:
+                        count += 1
+                        continue
+                    else:
+                        raise Exception(f"Failed to broadcast transaction after multiple attempts: {e}")
 
         return None
