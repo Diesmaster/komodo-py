@@ -55,6 +55,9 @@ class Wallet:
 		return ',\n'.join(f"{key} = {value}" for key, value in attrs.items())
 
 	def create_wallet( self ):
+
+		print("create wallet")
+
 		"""
 		// A private key must be a whole number from 1 to
 		//     0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364140,
@@ -89,6 +92,8 @@ class Wallet:
 		#returned private key
 		rPrivKey = hashByte.hex()
 
+
+		print("CREATE WALLET")
 
 		#ec arithmatic to generate the public key
 		cv = Curve.get_curve('secp256k1')
