@@ -181,6 +181,7 @@ class Oracles:
         # Call the oracle_create method from the wallet object
 
         print(data_fee)
+        print(name)
 
         res = self.query.oracles_create(name, description, "S")
         
