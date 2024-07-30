@@ -177,6 +177,32 @@ class Oracles:
 
         return sub_txid
 
+    def recreate_oracle_from_fund(oracletxid, data_fee="1000000"):
+        print("recreation rare bug")
+
+        res = self.fund_oracle(oracle_txid)
+
+        print("fund res")
+        print(res)
+
+        fund_txid = self.query.broadcast(res['hex'])
+
+        res = self.register_as_publisher(oracle_txid, data_fee)
+
+        register_txid = self.query.broadcast(res['hex'])
+
+        for i in range(0,10):
+            try:
+                res = self.subscribe_oracle_total(oracle_txid, data_fee)
+                print(res)
+            except BaseException as e:
+                print(e)
+
+            time.sleep(5)
+
+        return oracle_txid
+
+
     def create_string_oracle(self, name, description, data_fee):
         # Call the oracle_create method from the wallet object
 

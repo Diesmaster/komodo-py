@@ -261,6 +261,14 @@ class WalletInterface:
 
 		return self.oracles.create_string_oracle(name, description, data_fee)
 
+
+	def recreate_oracle_from_fund( self, name, description, data_fee="1000000"):
+		if self.oracles == None:
+			return "oracles are none"
+
+		return self.oracles.recreate_oracle_from_fund(oracle_txid, data_fee)
+
+
 	def publish_data_string_to_oracle( self, oracle_txid, string):
 		if self.oracles == None:
 			return "oracles are none"
