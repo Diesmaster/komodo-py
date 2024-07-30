@@ -145,7 +145,7 @@ class QueryInterface:
             raise AttributeError("Explorer object has no method 'get_balance'")
 
     def get_blockcount(self):
-        if hasattr(self.query, 'get_balance'):
+        if hasattr(self.query, 'get_blockcount'):
             return self.query.get_blockcount()
         else:
             raise AttributeError("Explorer object has no method 'blockcount'")
