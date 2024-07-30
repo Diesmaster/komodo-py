@@ -4,7 +4,6 @@ import json
 import binascii
 import time
 
-from pyblake2 import blake2b
 import ecdsa
 
 class OpCodes:
@@ -41,7 +40,6 @@ class TxOut:
         self.pub_key = pub_key
 
     def __str__( self ):
-
         # Fetching attributes and their values as a dictionary
         attrs = vars(self)
         # Formatting the dictionary into string form
@@ -303,9 +301,9 @@ class Transaction:
 
             print(txouts)
 
-            hashPrevouts = blake2b(bytes.fromhex(txins), digest_size=32, person=b'ZcashPrevoutHash').hexdigest()
-            hashSequance = blake2b(bytes.fromhex(self.sequences), digest_size=32, person=b'ZcashSequencHash').hexdigest()
-            hashOutputs = blake2b(bytes.fromhex(txouts), digest_size=32, person=b'ZcashOutputsHash').hexdigest()
+            hashPrevouts = hashlib.blake2b(bytes.fromhex(txins), digest_size=32, person=b'ZcashPrevoutHash').hexdigest()
+            hashSequance = hashlib.blake2b(bytes.fromhex(self.sequences), digest_size=32, person=b'ZcashSequencHash').hexdigest()
+            hashOutputs = hashlib.blake2b(bytes.fromhex(txouts), digest_size=32, person=b'ZcashOutputsHash').hexdigest()
 
             nExpiryHeight = "00000000"
             nValueBalance = "0000000000000000"
@@ -341,7 +339,7 @@ class Transaction:
         if self.overwintered == True:
             data = bytes.fromhex(preimage)
             person = b'ZcashSigHash' + bytes.fromhex(self.sapling_branch_id)[::-1] #.to_bytes(4, 'little')
-            pre_hash = blake2b(data, digest_size=32, person=person).digest()
+            pre_hash = hashlib.blake2b(data, digest_size=32, person=person).digest()
 
         #print(binascii.hexlify(pre_hash).decode('ascii'))
                 
