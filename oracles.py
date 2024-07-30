@@ -177,7 +177,7 @@ class Oracles:
 
         return sub_txid
 
-    def recreate_oracle_from_fund(oracletxid, data_fee="1000000"):
+    def recreate_oracle_from_fund(self, oracle_txid, data_fee="1000000"):
         print("recreation rare bug")
 
         res = self.fund_oracle(oracle_txid)
