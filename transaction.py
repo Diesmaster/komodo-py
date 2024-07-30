@@ -451,10 +451,11 @@ class TxInterface:
                 return "needs to be the same type"
 
         address = self.wal.get_address()
+
         tx = self.get_tx( to_address, amount )
 
         utxos = self.query.get_utxos( address )
-   
+
         total_amount = 0
         if isinstance(to_address, list):
             for n_value in amount:
@@ -469,6 +470,8 @@ class TxInterface:
 
                 tx.add_input( utxo['txid'], utxo['amount'], utxo['vout'], utxo['scriptPubKey'])
                 rawtx = self.get_serialized_tx(tx)
+
+                res = ""
 
                 try:
                     res = self.query.broadcast( rawtx )
