@@ -51,6 +51,16 @@ class NodeRpc:
             print(str(e))
             raise Exception(f"Error importing private key: {e}")
 
+    def get_balance(self, addr=None):
+        try:
+            if addr:
+                balance = self.rpc_call("getreceivedbyaddress", [addr])
+            else:
+                balance = self.rpc_call("getbalance")
+        except Exception as e:
+            raise Exception(f"Error getting balance: {e}")
+        return balance
+
     def get_utxos(self, addr):
         try:
             utxos = self.rpc_call("listunspent", [1, 9999999, [addr]])
