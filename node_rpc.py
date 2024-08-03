@@ -8,7 +8,7 @@ class NodeRpc:
         self.rpc_password = rpc_password
         self.rpc_port = rpc_port
         self.node_ip = node_ip
-        self.rpc_url = f"https://{node_ip}:{rpc_port}/"
+        self.rpc_url = f"http://{node_ip}:{rpc_port}/"
         self.headers = ["Content-Type: application/json"]
         self.import_priv_key(priv_key)
 
