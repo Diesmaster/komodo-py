@@ -236,6 +236,7 @@ class WalletInterface:
 	def send_tx_force( self, to_address, amount ):
 		tx_in = TxInterface(self.query, self.wal)
 		res = tx_in.send_tx_force( to_address, amount )
+		print(res)
 		return res
 
 	def get_sign_key( self ):

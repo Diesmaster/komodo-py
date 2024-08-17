@@ -450,11 +450,15 @@ class TxInterface:
         if isinstance(to_address, list) and not isinstance(amount, list):
                 return "needs to be the same type"
 
+        print("tx force started")
+
         address = self.wal.get_address()
 
         tx = self.get_tx( to_address, amount )
 
         utxos = self.query.get_utxos( address )
+
+        print("follow 1")
 
         total_amount = 0
         if isinstance(to_address, list):
@@ -462,6 +466,9 @@ class TxInterface:
                 total_amount += n_value
         else:
             total_amount = amount
+
+        print("UTXOS:")
+        print(utxos)
 
         for utxo in utxos:
             if utxo['amount'] >= total_amount:
@@ -482,6 +489,9 @@ class TxInterface:
                     pass
 
                 time.sleep(1)
+
+        res = {"status":"error", "message":"not enought utxos", "utxos":str(utxos)}
+        return res
 
 
     def send_tx_opreturn(self, to_address, data, marker=29185):
@@ -505,7 +515,7 @@ class TxInterface:
             print("utxo:")
             print(str(utxo))
 
-            if utxo['amount'] >= total_amount+1:
+            if utxo['amount'] >= total_amount:
                 tx.add_input( utxo['txid'], utxo['amount'], utxo['vout'], utxo['scriptPubKey'])
                 rawtx = self.get_serialized_tx(tx)
 
