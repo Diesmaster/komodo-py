@@ -91,14 +91,14 @@ class Transaction:
 
         sig = ""
         pub = ""
-        if not self.tx_ins[0].signature == "":
+        if not self.tx_ins[0].signature == "" and not len(self.tx_ins[0].script_pubkey) == len("2103bbdb8b2e5f70affe34b275899acdec3c1569b6898503fa21b40b0d537e9a2b65ac"):
             if len(self.tx_ins[0].signature) == 140:
                 sig = OpCodes.OP_RETURN + OpCodes.PUSH_71 + self.tx_ins[0].signature
             else:
                 sig = OpCodes.OP_TOALTSTACK + OpCodes.PUSH_72 + self.tx_ins[0].signature
             pub = n_inputs + OpCodes.PUSH_33 + self.tx_ins[0].pub_key    
 
-        if len(self.tx_ins[0].script_pubkey) == len("2103bbdb8b2e5f70affe34b275899acdec3c1569b6898503fa21b40b0d537e9a2b65ac"):
+        if not self.tx_ins[0].signature == "" and len(self.tx_ins[0].script_pubkey) == len("2103bbdb8b2e5f70affe34b275899acdec3c1569b6898503fa21b40b0d537e9a2b65ac"):
             print("script pub key: " +  str(self.tx_ins[0].script_pubkey))
             print("no pubkey")
             print(len(self.tx_ins[0].signature))
@@ -107,7 +107,7 @@ class Transaction:
                 sig = OpCodes.PUSH_72 + OpCodes.PUSH_71 + self.tx_ins[0].signature
             else:
                 sig = OpCodes.PUSH_73 + OpCodes.PUSH_72 + self.tx_ins[0].signature
-            #sig = sig[:2]
+            sig = sig[:2]
             pub = n_inputs
 
         #start raw tx
