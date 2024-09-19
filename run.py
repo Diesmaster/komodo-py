@@ -1,6 +1,5 @@
 
 from transaction import TxInterface
-from transaction import Transaction
 from explorer import Explorer
 from wallet import WalletInterface
 from ecpy.curves     import Curve,Point

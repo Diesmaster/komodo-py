@@ -7,9 +7,9 @@ import ecdsa
 import hashlib
 import math
 from Crypto.Hash import RIPEMD160
-from transaction import TxInterface
-from explorer import QueryInterface
-from oracles import Oracles
+from .transaction import TxInterface
+from .explorer import QueryInterface
+from .oracles import Oracles
 
 ## utils
 def r160( data ):
@@ -210,9 +210,6 @@ class Wallet:
 	def get_wif( self ):
 		return self.wif
 
-	def get_priv_key( self ):
-		return self.priv_key
-
 
 class WalletInterface:
 	def __init__(self, backend, seed, oracle=False):
@@ -225,9 +222,6 @@ class WalletInterface:
 
 	def get_address( self ):
 		return self.wal.get_address()
-
-	def get_wal_dev(self):
-		return self.wal
 
 	def make_address_transaction( self, to_address, amount ):
 		tx_in = TxInterface(self.query, self.wal)
@@ -303,6 +297,3 @@ class WalletInterface:
 
 	def get_public_key(self):
 		return self.wal.get_public_key()
-
-	def get_priv_key_dev(self):
-		return self.wal.get_priv_key()
