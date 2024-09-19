@@ -3,7 +3,7 @@ import time
 import json
 import binascii
 import time
-
+from decimal import Decimal, ROUND_DOWN
 import ecdsa
 
 class OpCodes:
@@ -27,7 +27,9 @@ class OpCodes:
 class TxIn:
     def __init__(self, prev_tx_id, amount, vout, script_pubkey):
         self.prev_tx_id = prev_tx_id
-        self.amount = int(amount*1e8)
+        dec_amount = Decimal(str(amount)) 
+        scaled_amount = dec_amount * Decimal(1e8)
+        self.amount = int(scaled_amount.to_integral_value(rounding=ROUND_DOWN))
         self.vout = int(vout)
         self.script_pubkey = script_pubkey
         self.pub_key = ""
@@ -99,15 +101,11 @@ class Transaction:
             pub = n_inputs + OpCodes.PUSH_33 + self.tx_ins[0].pub_key    
 
         if not self.tx_ins[0].signature == "" and len(self.tx_ins[0].script_pubkey) == len("2103bbdb8b2e5f70affe34b275899acdec3c1569b6898503fa21b40b0d537e9a2b65ac"):
-            print("script pub key: " +  str(self.tx_ins[0].script_pubkey))
-            print("no pubkey")
-            print(len(self.tx_ins[0].signature))
-            print(self.tx_ins[0].signature)
             if len(self.tx_ins[0].signature) == 140:
                 sig = OpCodes.PUSH_72 + OpCodes.PUSH_71 + self.tx_ins[0].signature
             else:
                 sig = OpCodes.PUSH_73 + OpCodes.PUSH_72 + self.tx_ins[0].signature
-            sig = sig[:2]
+            #sig = sig[:2]
             pub = n_inputs
 
         #start raw tx
@@ -241,6 +239,9 @@ class Transaction:
         # You'll need to convert each field to bytes and concatenate them
 
         rawtx = self.serialize_inputs()
+        print("INPUTS + START RAWTX:")
+        print(rawtx)
+
         rawtx = rawtx + self.serialize_outputs()
         rawtx = rawtx + self.serialize_end()
         return rawtx
@@ -284,13 +285,6 @@ class Transaction:
         nVersionGroupId = self.version_group_id
         nLocktime = self.locktime #bytes.fromhex(format(self.locktime, '016x'))[::-1].hex()
         
-        txins = self.serialize_inputs()
-        txouts = self.serialize_outputs()
-        print("-----txouts-----")
-        #print(txouts)
-        txouts_barray = bytes.fromhex(txouts)
-        #print(txouts)
-
         if self.overwintered == True:
             hashJoinSplits = '00'*32
             hashShieldedSpends = '00'*32
@@ -325,11 +319,7 @@ class Transaction:
             preimage = nVersion + nVersionGroupId + hashPrevouts + hashSequance + hashOutputs + hashJoinSplits + hashShieldedSpends + hashShieldedOutputs + nLocktime + nExpiryHeight + nValueBalance + nHashType + txins + scriptCode + val +  self.sequences
 
         else:
-            # Check if transaction is overwintered
-            
-
-            # Construct the preimage for non-overwintered transactions
-            preimage = nVersion + txins + txouts + nLocktime + nHashType
+            return None
 
         return preimage
 
@@ -433,6 +423,9 @@ class TxInterface:
         utxos = self.query.get_utxos( address )
         utxo = find_utxo( utxos, 1 )
 
+
+        print("SCRIPT PUBKEY:")
+        print(utxo['scriptPubKey'])
 
         tx.add_input( utxo['txid'], utxo['amount'], utxo['vout'], utxo['scriptPubKey'])
 

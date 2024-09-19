@@ -123,6 +123,7 @@ class Explorer:
                 print(broadcast_res.text)
                 raise Exception(broadcast_res.text)
             else:
+                print(broadcast_res.text)
                 return json.loads(broadcast_res.text)
 
         except Exception as e:
