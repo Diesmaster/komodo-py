@@ -135,6 +135,15 @@ class NodeRpc:
             raise Exception(f"Error getting tx: {e}")
         return tx
 
+
+    def get_addresstxids(self, address):
+        try:
+            tx = self.rpc_call("getaddresstxids", [{'addresses': [address]}])
+        except Exception as e:
+            raise Exception(f"Error getting tx: {e}")
+        return tx
+
+
     ### oracle functions
     def oracles_create(self, name, description, data_type):
         try:
