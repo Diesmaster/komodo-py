@@ -56,7 +56,7 @@ class Oracles:
 
         return res
 
-    def register_as_publisher(self, oracle_txid, data_fee):
+    def register_as_publisher(self, oracle_txid, data_fee="1000000"):
 
         print("register")
         print(oracle_txid)
@@ -125,17 +125,18 @@ class Oracles:
 
         while res.get('result') == 'error' and x < max_retry:
             print("Error encountered. Trying again... " + str(res))
-            ret = self.subscribe_oracle_total(oracle_txid, "1")
+            ret = self.subscribe_oracle_total(oracle_txid, "1000000")
             print(ret)
             time.sleep(retry_interval)
             res = self.query.oracles_data(oracle_txid, final_hex_data)
             x += 1
 
+        print("this res causes an error:")
         print(res)
 
         pub_txid = self.query.broadcast(res['hex'])
 
-        self.subscribe_oracle_total(oracle_txid, "1")
+        self.subscribe_oracle_total(oracle_txid, "1000000")
 
         return pub_txid
 
@@ -155,11 +156,11 @@ class Oracles:
 
         return res
 
-    def subscribe_oracle_total(self, oracle_txid, data_fee):
+    def subscribe_oracle_total(self, oracle_txid, data_fee="1000000"):
         res = self.get_oracle_info_while(oracle_txid)
 
         publisherid = res['registered'][0]['publisher']
-
+        
         res = {}
 
         while not res.get('result'):
@@ -203,7 +204,7 @@ class Oracles:
         return oracle_txid
 
 
-    def create_string_oracle(self, name, description, data_fee):
+    def create_string_oracle(self, name, description, data_fee="1000000"):
         # Call the oracle_create method from the wallet object
 
         print(data_fee)

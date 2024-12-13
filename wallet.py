@@ -276,7 +276,7 @@ class WalletInterface:
 
 		return self.oracles.publish_data_string_to_oracle(oracle_txid, string)
 
-	def subscribe_to_oracle( self, oracle_txid, data_fee="1" ):
+	def subscribe_to_oracle( self, oracle_txid, data_fee="1000000" ):
 		return self.oracles.subscribe_oracle_total(oracle_txid, data_fee)
 
 	def get_oracle_info( self, oracle_txid):

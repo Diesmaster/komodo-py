@@ -439,17 +439,17 @@ class TxInterface:
         res = self.query.broadcast_via_explorer( rawtx )
         return res
 
-    def send_tx_force( self, to_address, amount ):
+    def send_tx_force(self, to_address, amount):
         if isinstance(to_address, list) and not isinstance(amount, list):
-                return "needs to be the same type"
+            raise ValueError("Address and amount need to be the same type")
 
         print("tx force started")
 
         address = self.wal.get_address()
 
-        tx = self.get_tx( to_address, amount )
+        tx = self.get_tx(to_address, amount)
 
-        utxos = self.query.get_utxos( address )
+        utxos = self.query.get_utxos(address)
 
         print("follow 1")
 
@@ -465,26 +465,35 @@ class TxInterface:
 
         for utxo in utxos:
             if utxo['amount'] >= total_amount:
-
                 print("we get here")
 
-                tx.add_input( utxo['txid'], utxo['amount'], utxo['vout'], utxo['scriptPubKey'])
+                tx.add_input(utxo['txid'], utxo['amount'], utxo['vout'], utxo['scriptPubKey'])
                 rawtx = self.get_serialized_tx(tx)
 
                 res = ""
 
                 try:
-                    res = self.query.broadcast( rawtx )
+                    res = self.query.broadcast(rawtx)
                     if 'txid' in res:
-                        return res        
-                except:
+                        return res
+                except Exception as e:
+                    print(f"Error during broadcast: {e}")
                     print(res)
                     pass
 
                 time.sleep(1)
 
-        res = {"status":"error", "message":"not enought utxos", "utxos":str(utxos)}
-        return res
+        error_message = "Not enough UTXOs available"
+        res = {"status": "error", "message": error_message, "utxos": str(utxos)}
+        
+        big_utxos = []
+        for uxto in utxos:
+            if utxo['amount'] > 30:
+                big_utxos.append(uxto)
+
+        # Raise an exception instead of just returning the result
+        raise RuntimeError(f"{error_message}. UTXOs: {big_utxos}, Number: {len(big_utxos)}")
+
 
 
     def send_tx_opreturn(self, to_address, data, marker=29185):
