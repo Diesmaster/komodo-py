@@ -447,6 +447,9 @@ class TxInterface:
 
         address = self.wal.get_address()
 
+        print("on address")
+        print(address)
+
         tx = self.get_tx(to_address, amount)
 
         utxos = self.query.get_utxos(address)
