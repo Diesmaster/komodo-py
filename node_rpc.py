@@ -175,7 +175,11 @@ class NodeRpc:
 
     def oracles_info(self, oracle_id):
         try:
+            print("## we get here ###")
+            print(oracle_id)
             oracles_info = self.rpc_call("oraclesinfo", [oracle_id])
+            print(oracles_info)
+
         except Exception as e:
             raise Exception(f"Error in oracles_info: {e}")
         return oracles_info
