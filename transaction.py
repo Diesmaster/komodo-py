@@ -5,6 +5,8 @@ import binascii
 import time
 from decimal import Decimal, ROUND_DOWN
 import ecdsa
+import ast
+
 
 class OpCodes:
     OP_CHECKSIG = "ac"
@@ -159,6 +161,8 @@ class Transaction:
                     
                     hex_length = format(int(len(tx_out.pub_key)/2), '02X')
 
+                    print(f"hex: {int(hex_length, 16)}")
+
                     print("Lenght: " + str(hex_length))
 
                     if len(hex_length) > 2:
@@ -167,6 +171,11 @@ class Transaction:
                        print("Lenght: " + str(hex_length))
 
                        hex_length = "fd" + hex_length
+
+                    #print(int(hex_length, 16))
+                    #print(int(hex_length, 16) > 75)
+                    #if int(hex_length, 16) > 75:
+                        #hex_length = "4c" +  hex_length
 
                     amount = bytes.fromhex(format(tx_out.value, '016x'))[::-1].hex()
                     rawtx += str(amount) + hex_length + tx_out.pub_key
@@ -379,11 +388,15 @@ class TxInterface:
     def get_opreturn_script(self, data):
         OP_RETURN = "6a"
         OP_PUSHDATA2 = "4d"
+        OP_PUSHDATA1 = "4c"
         hex_length = format(int(len(data)/2), '02X')
         if len(hex_length) > 2:
             hex_length =  bytes.fromhex(format(int(len(data)/2), '04X'))[::-1].hex()
-            #print(hex_length)
+            print(hex_length)
             return OP_RETURN + OP_PUSHDATA2 + hex_length + data
+        elif int(hex_length, 16) > 75:
+            return OP_RETURN + OP_PUSHDATA1 + hex_length + data
+
         else:
             return OP_RETURN + hex_length + data
 
@@ -396,10 +409,30 @@ class TxInterface:
         tx = Transaction(from_scriptpubkey)
     
         print("amount: " + str(amount))
+        print(f"addy instance: {type(to_address) }")
 
-        to_scriptpubkey = self.wal.base58DecodeIguana(to_address).hex()[2:-8]
-        tx.add_output( amount, to_scriptpubkey )
-        tx.add_output( 0, self.get_opreturn_script(data))
+        # Safely convert string to list if needed
+        if isinstance(to_address, str):
+            try:
+                parsed = ast.literal_eval(to_address)
+                if isinstance(parsed, list):
+                    to_address = parsed
+            except (ValueError, SyntaxError):
+                pass  # Leave it as string if it can't be parsed into a list
+
+
+        if isinstance(to_address, list):
+            for addy in to_address:
+                to_scriptpubkey = self.wal.base58DecodeIguana(addy).hex()[2:-8]
+                tx.add_output( amount, to_scriptpubkey )
+
+            tx.add_output( 0, self.get_opreturn_script(data))
+        else:
+            to_scriptpubkey = self.wal.base58DecodeIguana(to_address).hex()[2:-8]
+            tx.add_output( amount, to_scriptpubkey )
+            tx.add_output( 0, self.get_opreturn_script(data))
+
+        print(f"DATA: {data}")
 
         return tx
 
